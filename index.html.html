@@ -689,5 +689,21 @@ function showToast(msg){
 // ── INIT ──
 renderPreview();
 </script>
+<script type="module">
+  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+
+  const supabase = createClient(
+    'https://jesmfhqrthpugkustxwc.supabase.co',
+    'sb_publishable_-yc_6nEL_C8KJSrt0EK-QA_ZoUl7tn_'
+  )
+
+  window.supabase = supabase
+
+  console.log("Supabase подключен 🚀")
+  const { data, error } = await supabase
+  .from('outlets')
+  .select('*')
+console.log(data, error)
+</script>
 </body>
 </html>
