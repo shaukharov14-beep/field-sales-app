@@ -708,8 +708,8 @@ console.log(data, error)
   const { data, error } = await supabase
     .from('visits')
     .insert({
-      user_id: null,
-      outlet_id: null,
+      user_id: 6596bec5-fb17-4d7b-bf41-83899e10feee,
+      outlet_id: 0881ba15-e29c-45a8-a3f9-dad8c23c553f,
       checkin_time: new Date(),
       status: 'in_progress'
     })
