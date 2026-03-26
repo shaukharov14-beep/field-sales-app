@@ -713,6 +713,7 @@ console.log(data, error)
       checkin_time: new Date(),
       status: 'in_progress'
     })
+    .select()
   console.log('VISIT RESULT:', data, error)
 }
   createVisit()
