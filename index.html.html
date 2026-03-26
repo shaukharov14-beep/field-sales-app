@@ -2,748 +2,692 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>Field Sales OS — Прототип</title>
-<link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Field Sales OS · Инструменты</title>
+<link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-:root {
-  --tg: #2AABEE;
-  --tg-dark: #1a8ac4;
-  --tg-header: #2AABEE;
-  --bg: #f0f4f7;
-  --card: #ffffff;
-  --border: rgba(0,0,0,0.08);
-  --text: #1a1a1a;
-  --text2: #666;
-  --text3: #aaa;
-  --green: #3B6D11; --green-bg: #EAF3DE; --green-border: #C0DD97;
-  --amber: #854F0B; --amber-bg: #FAEEDA; --amber-border: #FAC775;
-  --red: #A32D2D; --red-bg: #FCEBEB; --red-border: #F7C1C1;
-  --blue: #185FA5; --blue-bg: #E6F1FB; --blue-border: #B5D4F4;
-  --purple: #534AB7; --purple-bg: #EEEDFE;
-  --radius: 12px;
-  --font: 'Golos Text', sans-serif;
+:root{
+  --tg:#2AABEE;--tg2:#1a8ac4;--bg:#eef2f5;--card:#fff;
+  --b:rgba(0,0,0,0.08);--t:#1a1a1a;--t2:#666;--t3:#bbb;
+  --green:#2e7d32;--gbg:#e8f5e9;--gbr:#a5d6a7;
+  --amber:#bf6e00;--abg:#fff8e1;--abr:#ffe082;
+  --red:#c62828;--rbg:#ffebee;--rbr:#ef9a9a;
+  --blue:#1565c0;--bbg:#e3f2fd;--bbr:#90caf9;
+  --r:12px;--f:'Golos Text',sans-serif;
 }
-* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-body { font-family: var(--font); background: #e8edf2; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 20px 16px 40px; }
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{font-family:var(--f);background:#d4dce5;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:14px 10px 40px;}
 
-/* Role switcher */
-.role-bar { display: flex; gap: 0; background: var(--card); border-radius: 50px; padding: 4px; margin-bottom: 16px; border: 1px solid var(--border); width: 100%; max-width: 420px; }
-.role-btn { flex: 1; padding: 8px 0; border-radius: 50px; border: none; font-family: var(--font); font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s; color: var(--text2); background: transparent; }
-.role-btn.on { background: var(--tg); color: #fff; }
+/* NAV TABS */
+.nav-tabs{display:flex;gap:0;background:var(--card);border-radius:50px;padding:4px;margin-bottom:16px;border:1px solid var(--b);width:100%;max-width:480px;}
+.ntab{flex:1;padding:9px 0;border-radius:50px;border:none;font-family:var(--f);font-size:13px;font-weight:600;cursor:pointer;color:var(--t2);background:transparent;transition:all .2s;}
+.ntab.on{background:var(--tg);color:#fff;}
 
-/* Phone frame */
-.phone-wrap { width: 100%; max-width: 390px; }
-.phone { background: var(--card); border-radius: 24px; overflow: hidden; border: 1px solid var(--border); box-shadow: 0 8px 32px rgba(0,0,0,0.12); min-height: 700px; display: flex; flex-direction: column; position: relative; }
+/* PHONE */
+.phone-wrap{width:100%;max-width:390px;}
+.phone{background:var(--card);border-radius:28px;border:1px solid var(--b);box-shadow:0 12px 40px rgba(0,0,0,0.15);overflow:hidden;display:flex;flex-direction:column;}
 
-/* Status bar */
-.sbar { background: var(--tg-header); display: flex; justify-content: space-between; padding: 10px 18px 6px; }
-.sbar span { color: rgba(255,255,255,0.9); font-size: 11px; font-weight: 600; }
+/* STATUS + HEADER */
+.sbar{background:var(--tg);display:flex;justify-content:space-between;padding:10px 18px 6px;}
+.sbar span{color:rgba(255,255,255,.9);font-size:11px;font-weight:700;}
+.hdr{background:var(--tg);padding:8px 14px 13px;display:flex;align-items:center;gap:10px;}
+.hdr-back{color:#fff;font-size:22px;cursor:pointer;line-height:1;width:24px;user-select:none;}
+.hdr-text .ht{color:#fff;font-size:15px;font-weight:700;}
+.hdr-text .hs{color:rgba(255,255,255,.75);font-size:11px;margin-top:1px;}
 
-/* Header */
-.hdr { background: var(--tg-header); padding: 8px 14px 12px; display: flex; align-items: center; gap: 10px; }
-.hdr-back { color: #fff; font-size: 22px; cursor: pointer; line-height: 1; width: 24px; flex-shrink: 0; user-select: none; }
-.hdr-av { width: 34px; height: 34px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 12px; font-weight: 600; flex-shrink: 0; }
-.hdr-text { flex: 1; }
-.hdr-title { color: #fff; font-size: 15px; font-weight: 600; }
-.hdr-sub { color: rgba(255,255,255,0.75); font-size: 11px; margin-top: 1px; }
-.hdr-action { color: rgba(255,255,255,0.85); font-size: 12px; cursor: pointer; white-space: nowrap; }
+/* SCREEN */
+.screen{background:var(--bg);padding:12px 12px 80px;flex:1;}
 
-/* Screen body */
-.screen { flex: 1; background: var(--bg); overflow-y: auto; padding: 10px 10px 80px; }
+/* FORM ELEMENTS */
+.field-group{margin-bottom:14px;}
+.field-group label{display:block;font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;}
+.field-group input,.field-group select,.field-group textarea{
+  width:100%;border:1.5px solid var(--b);border-radius:10px;padding:10px 12px;
+  font-size:14px;font-family:var(--f);color:var(--t);background:var(--card);outline:none;
+  transition:border-color .15s;
+}
+.field-group input:focus,.field-group select:focus,.field-group textarea:focus{border-color:var(--tg);}
+.field-group textarea{resize:none;line-height:1.5;}
+.field-group .hint{font-size:10px;color:var(--t3);margin-top:4px;}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
 
-/* Bottom nav */
-.bnav { background: var(--card); border-top: 1px solid var(--border); display: flex; padding: 6px 0 10px; flex-shrink: 0; }
-.bnav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; padding: 4px 0; }
-.bnav-btn svg { width: 22px; height: 22px; }
-.bnav-lbl { font-size: 10px; color: var(--text3); font-family: var(--font); }
-.bnav-btn.active .bnav-lbl { color: var(--tg); }
+/* SELECT CHIPS */
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;}
+.chip-opt{font-size:12px;padding:5px 12px;border-radius:20px;border:1.5px solid var(--b);background:var(--card);color:var(--t2);cursor:pointer;font-family:var(--f);font-weight:600;transition:all .15s;user-select:none;}
+.chip-opt.on{background:var(--tg);color:#fff;border-color:var(--tg);}
 
-/* Cards */
-.card { background: var(--card); border-radius: var(--radius); border: 1px solid var(--border); margin-bottom: 8px; overflow: hidden; }
-.card-p { padding: 12px 14px; }
+/* SECTION */
+.sec{font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin:16px 0 8px 2px;}
 
-/* Section label */
-.sec-lbl { font-size: 10px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; margin: 10px 0 6px; padding: 0 2px; }
+/* CARDS */
+.card{background:var(--card);border-radius:var(--r);border:1px solid var(--b);margin-bottom:8px;overflow:hidden;}
+.card-p{padding:12px 14px;}
+.ai-card{background:var(--gbg);border:1px solid var(--gbr);border-radius:var(--r);padding:10px 12px;margin-bottom:10px;}
+.ai-hdr{display:flex;align-items:center;gap:6px;margin-bottom:4px;}
+.ai-dot{width:7px;height:7px;border-radius:50%;background:var(--green);}
+.ai-title{font-size:11px;font-weight:700;color:var(--green);}
+.ai-body{font-size:12px;color:#1b5e20;line-height:1.5;}
+.warn-card{background:var(--abg);border:1px solid var(--abr);border-radius:var(--r);padding:10px 12px;margin-bottom:10px;}
 
-/* Pills / badges */
-.pill { font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: 600; display: inline-block; }
-.pill-green { background: var(--green-bg); color: var(--green); }
-.pill-amber { background: var(--amber-bg); color: var(--amber); }
-.pill-red { background: var(--red-bg); color: var(--red); }
-.pill-blue { background: var(--blue-bg); color: var(--blue); }
-.pill-purple { background: var(--purple-bg); color: var(--purple); }
-.pill-gray { background: #f0f0f0; color: #666; }
+/* BUTTONS */
+.btn-primary{width:100%;background:var(--tg);color:#fff;border:none;border-radius:14px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:var(--f);transition:background .15s;}
+.btn-primary:active{background:var(--tg2);}
+.btn-secondary{width:100%;background:var(--card);color:var(--tg);border:2px solid var(--tg);border-radius:14px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;font-family:var(--f);margin-top:8px;}
+.btn-green{background:var(--green);}
+.btn-sm{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:10px;border:none;font-family:var(--f);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;}
+.btn-sm:active{transform:scale(.97);}
+.btn-tg{background:var(--tg);color:#fff;}
+.btn-outline{background:var(--card);color:var(--t2);border:1.5px solid var(--b);}
+.btn-outline:hover{background:var(--bg);}
 
-/* Tags row */
-.tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
-.tag { font-size: 10px; padding: 3px 8px; border-radius: 10px; font-weight: 500; }
+/* PROGRESS STEPS */
+.steps{display:flex;align-items:center;margin-bottom:16px;gap:0;}
+.step{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;position:relative;}
+.step:not(:last-child)::after{content:'';position:absolute;top:12px;left:55%;width:90%;height:2px;background:var(--b);}
+.step.done::after,.step.active::after{background:var(--tg);}
+.step-dot{width:24px;height:24px;border-radius:50%;border:2px solid var(--b);background:var(--card);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--t3);z-index:1;}
+.step.done .step-dot{background:var(--tg);border-color:var(--tg);color:#fff;}
+.step.active .step-dot{border-color:var(--tg);color:var(--tg);}
+.step-lbl{font-size:9px;font-weight:600;color:var(--t3);text-align:center;}
+.step.active .step-lbl,.step.done .step-lbl{color:var(--tg);}
 
-/* Info rows */
-.irow { display: flex; justify-content: space-between; align-items: center; padding: 7px 14px; border-bottom: 1px solid var(--border); font-size: 12px; }
-.irow:last-child { border-bottom: none; }
-.ik { color: var(--text2); }
-.iv { font-weight: 500; color: var(--text); text-align: right; }
+/* INFO ROWS */
+.irow{display:flex;justify-content:space-between;align-items:center;padding:7px 14px;border-bottom:1px solid var(--b);font-size:12px;}
+.irow:last-child{border-bottom:none;}
+.ik{color:var(--t2);}
+.iv{font-weight:600;color:var(--t);}
+.iv.blue{color:var(--blue);}
+.iv.green{color:var(--green);}
+.iv.red{color:var(--red);}
 
-/* Qty control */
-.qty-wrap { display: flex; align-items: center; gap: 8px; }
-.qty-btn { width: 28px; height: 28px; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 500; cursor: pointer; font-family: var(--font); transition: transform 0.1s; }
-.qty-btn:active { transform: scale(0.9); }
-.qty-btn.m { background: #f0f4f7; color: var(--text2); }
-.qty-btn.p { background: var(--tg); color: #fff; }
-.qty-val { font-size: 15px; font-weight: 600; color: var(--text); min-width: 22px; text-align: center; }
+/* PILLS */
+.pill{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700;display:inline-block;}
+.pg{background:var(--gbg);color:var(--green);}
+.pa{background:var(--abg);color:var(--amber);}
+.pr{background:var(--rbg);color:var(--red);}
+.pb{background:var(--bbg);color:var(--blue);}
 
-/* Big button */
-.big-btn { width: 100%; background: var(--tg); color: #fff; border: none; border-radius: 14px; padding: 14px; font-size: 15px; font-weight: 600; cursor: pointer; font-family: var(--font); transition: background 0.15s; }
-.big-btn:active { background: var(--tg-dark); }
-.big-btn-outline { width: 100%; background: var(--card); color: var(--tg); border: 1.5px solid var(--tg); border-radius: 14px; padding: 13px; font-size: 15px; font-weight: 600; cursor: pointer; font-family: var(--font); margin-top: 8px; }
+/* ORDER ITEMS */
+.order-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid var(--b);}
+.order-item:last-child{border-bottom:none;}
+.oi-ico{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;}
+.oi-info{flex:1;min-width:0;}
+.oi-name{font-size:13px;font-weight:600;color:var(--t);}
+.oi-sub{font-size:10px;color:var(--t2);margin-top:1px;}
+.oi-amt{text-align:right;flex-shrink:0;}
+.oi-qty{font-size:11px;color:var(--t2);}
+.oi-price{font-size:13px;font-weight:700;color:var(--t);}
 
-/* AI banner */
-.ai-card { background: var(--green-bg); border: 1px solid var(--green-border); border-radius: var(--radius); padding: 10px 12px; margin-bottom: 8px; }
-.ai-hdr { display: flex; align-items: center; gap: 6px; margin-bottom: 5px; }
-.ai-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
-.ai-title { font-size: 11px; font-weight: 600; color: var(--green); }
-.ai-body { font-size: 12px; color: #27500A; line-height: 1.5; }
-.ai-chips { display: flex; gap: 5px; margin-top: 7px; flex-wrap: wrap; }
-.chip { font-size: 11px; background: var(--card); border: 1px solid var(--green-border); color: var(--green); padding: 4px 10px; border-radius: 10px; cursor: pointer; font-family: var(--font); font-weight: 500; transition: background 0.1s; }
-.chip:active { background: var(--green-bg); }
+/* EXPORT PANEL */
+.export-panel{background:var(--card);border-radius:var(--r);border:1px solid var(--b);overflow:hidden;margin-bottom:10px;}
+.ep-hdr{background:var(--bg);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--b);}
+.ep-title{font-size:12px;font-weight:700;color:var(--t);}
+.ep-body{padding:12px 14px;}
+.fmt-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;}
+.fmt-card{border:2px solid var(--b);border-radius:10px;padding:10px 8px;text-align:center;cursor:pointer;transition:all .15s;}
+.fmt-card:hover{border-color:var(--tg);}
+.fmt-card.on{border-color:var(--tg);background:var(--bbg);}
+.fmt-ico{font-size:24px;margin-bottom:4px;}
+.fmt-name{font-size:11px;font-weight:700;color:var(--t);}
+.fmt-desc{font-size:9px;color:var(--t2);margin-top:2px;}
 
-.warn-card { background: var(--amber-bg); border: 1px solid var(--amber-border); border-radius: var(--radius); padding: 10px 12px; margin-bottom: 8px; }
-.warn-hdr { display: flex; align-items: center; gap: 6px; margin-bottom: 5px; }
-.warn-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--amber); flex-shrink: 0; }
-.warn-title { font-size: 11px; font-weight: 600; color: var(--amber); }
-.warn-body { font-size: 12px; color: #633806; line-height: 1.5; }
+/* XML PREVIEW */
+.code-preview{background:#1e1e2e;border-radius:10px;padding:12px;font-family:'Courier New',monospace;font-size:10px;color:#cdd6f4;overflow-x:auto;max-height:200px;overflow-y:auto;line-height:1.6;margin-bottom:10px;}
+.code-preview .xml-tag{color:#89b4fa;}
+.code-preview .xml-attr{color:#f38ba8;}
+.code-preview .xml-val{color:#a6e3a1;}
+.code-preview .xml-comment{color:#6c7086;}
 
-/* Date chip */
-.date-chip { background: rgba(42,171,238,0.12); color: var(--tg-dark); font-size: 11px; font-weight: 600; border-radius: 12px; padding: 3px 14px; text-align: center; margin: 6px auto 10px; display: table; }
+/* CSV PREVIEW */
+.csv-preview{background:#0d1117;border-radius:10px;padding:12px;font-family:'Courier New',monospace;font-size:10px;color:#58a6ff;overflow-x:auto;max-height:160px;overflow-y:auto;line-height:1.7;margin-bottom:10px;}
 
-/* Stat grid */
-.stat-grid { display: grid; gap: 8px; margin-bottom: 10px; }
-.stat-grid-3 { grid-template-columns: repeat(3, 1fr); }
-.stat-grid-4 { grid-template-columns: repeat(4, 1fr); }
-.stat-card { background: var(--card); border-radius: 10px; border: 1px solid var(--border); padding: 10px 8px; text-align: center; }
-.stat-n { font-size: 20px; font-weight: 600; color: var(--text); }
-.stat-l { font-size: 10px; color: var(--text2); margin-top: 2px; line-height: 1.3; }
+/* SUCCESS */
+.success-screen{display:flex;flex-direction:column;align-items:center;padding:30px 16px;text-align:center;}
+.success-ico-wrap{width:72px;height:72px;border-radius:50%;background:var(--gbg);display:flex;align-items:center;justify-content:center;margin-bottom:16px;}
 
-/* Route card */
-.rt-card { background: var(--card); border-radius: var(--radius); border: 1px solid var(--border); margin-bottom: 7px; overflow: hidden; cursor: pointer; transition: opacity 0.1s; }
-.rt-card:active { opacity: 0.85; }
-.rt-top { display: flex; align-items: center; gap: 10px; padding: 10px 12px; }
-.rt-ico { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.rt-info { flex: 1; min-width: 0; }
-.rt-name { font-size: 14px; font-weight: 600; color: var(--text); }
-.rt-addr { font-size: 11px; color: var(--text2); margin-top: 1px; }
-.rt-right { text-align: right; flex-shrink: 0; }
-.rt-time { font-size: 11px; color: var(--text2); margin-bottom: 4px; }
-.rt-bar { height: 3px; background: #e8e8e8; margin: 0 12px 8px; border-radius: 2px; }
-.rt-fill { height: 100%; border-radius: 2px; transition: width 0.3s; }
-.rt-dist { font-size: 11px; color: var(--tg); padding: 0 12px 8px; display: flex; align-items: center; gap: 4px; }
+/* BOTTOM NAV */
+.bnav{background:var(--card);border-top:1px solid var(--b);display:flex;padding:6px 0 10px;flex-shrink:0;}
+.bnav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:4px 0;}
+.bnav-lbl{font-size:10px;color:var(--t3);font-family:var(--f);font-weight:600;}
+.bnav-btn.on .bnav-lbl{color:var(--tg);}
 
-/* Map mock */
-.map-mock { height: 170px; background: #dce8f0; position: relative; overflow: hidden; }
-.map-road-h { position: absolute; background: rgba(255,255,255,0.7); height: 3px; width: 100%; }
-.map-road-v { position: absolute; background: rgba(255,255,255,0.7); width: 3px; height: 100%; }
-.map-grid-h { position: absolute; background: rgba(255,255,255,0.3); height: 1px; width: 100%; }
-.map-grid-v { position: absolute; background: rgba(255,255,255,0.3); width: 1px; height: 100%; }
-.map-pin { position: absolute; width: 32px; height: 32px; border-radius: 50%; background: var(--tg); display: flex; align-items: center; justify-content: center; top: 50%; left: 50%; transform: translate(-50%, -55%); }
-.map-ring1 { position: absolute; width: 52px; height: 52px; border-radius: 50%; border: 2px solid rgba(42,171,238,0.3); top: 50%; left: 50%; transform: translate(-50%, -55%); }
-.map-ring2 { position: absolute; width: 76px; height: 76px; border-radius: 50%; border: 1.5px solid rgba(42,171,238,0.15); top: 50%; left: 50%; transform: translate(-50%, -55%); }
+/* MAP PLACEHOLDER */
+.map-ph{height:140px;background:#dce8f2;border-radius:10px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;margin-bottom:10px;border:1px solid var(--b);}
+.map-road-h{position:absolute;height:3px;background:rgba(255,255,255,.8);width:100%;}
+.map-road-v{position:absolute;width:3px;background:rgba(255,255,255,.8);height:100%;}
+.map-pin-outer{position:absolute;width:36px;height:36px;border-radius:50%;border:2px solid rgba(42,171,238,.3);top:50%;left:50%;transform:translate(-50%,-55%);}
+.map-pin-inner{position:absolute;width:22px;height:22px;border-radius:50%;background:var(--tg);top:50%;left:50%;transform:translate(-50%,-55%);display:flex;align-items:center;justify-content:center;}
+.map-locate-btn{position:absolute;bottom:8px;right:8px;background:var(--card);border:1px solid var(--b);border-radius:8px;padding:5px 8px;font-size:11px;font-weight:600;color:var(--tg);cursor:pointer;}
 
-/* SKU card */
-.sku-card { background: var(--card); border-radius: var(--radius); border: 1px solid var(--border); margin-bottom: 6px; overflow: hidden; }
-.sku-top { display: flex; align-items: center; gap: 10px; padding: 10px 12px; }
-.sku-img { width: 42px; height: 42px; border-radius: 9px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.sku-meta { flex: 1; min-width: 0; }
-.sku-name { font-size: 13px; font-weight: 600; color: var(--text); }
-.sku-sub { font-size: 10px; color: var(--text2); margin-top: 1px; }
-.sku-price { text-align: right; flex-shrink: 0; }
-.sku-pval { font-size: 14px; font-weight: 600; color: var(--text); }
-.sku-ptype { font-size: 9px; color: var(--text2); }
-.sku-foot { display: flex; align-items: center; justify-content: space-between; padding: 6px 12px 9px; border-top: 1px solid rgba(0,0,0,0.05); }
-.stock-row { display: flex; align-items: center; gap: 5px; }
-.sdot { width: 6px; height: 6px; border-radius: 50%; }
+/* TOAST */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a1a1a;color:#fff;padding:10px 20px;border-radius:50px;font-size:13px;font-weight:600;font-family:var(--f);z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap;}
+.toast.show{opacity:1;}
 
-/* Cart bar */
-.cart-bar { background: var(--tg); margin: 8px 0 0; border-radius: var(--radius); padding: 12px 14px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: background 0.15s; }
-.cart-bar:active { background: var(--tg-dark); }
-.cart-left { display: flex; align-items: center; gap: 8px; }
-.cart-badge { background: rgba(255,255,255,0.25); color: #fff; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 10px; }
-.cart-lbl { color: #fff; font-size: 13px; font-weight: 600; }
-.cart-total { color: #fff; font-size: 15px; font-weight: 600; }
+/* SCROLLBAR */
+.screen::-webkit-scrollbar{width:3px;}
+.screen::-webkit-scrollbar-thumb{background:rgba(0,0,0,.1);border-radius:3px;}
 
-/* Balance */
-.coin-hero { background: var(--tg); border-radius: 16px; padding: 18px; margin-bottom: 10px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
-.coin-ico { width: 54px; height: 54px; border-radius: 50%; background: #FFD700; display: flex; align-items: center; justify-content: center; margin-bottom: 4px; border: 3px solid #FFA000; font-size: 24px; font-weight: 700; color: #E65100; }
-.coin-bal { font-size: 34px; font-weight: 700; color: #fff; }
-.coin-lbl { font-size: 12px; color: rgba(255,255,255,0.8); }
-.coin-change { font-size: 11px; background: rgba(255,255,255,0.2); color: #fff; padding: 3px 12px; border-radius: 12px; margin-top: 2px; }
+/* FADE */
+.fade-in{animation:fadeIn .2s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
 
-/* Tab row */
-.tab-row { display: flex; background: var(--card); border-radius: 10px; border: 1px solid var(--border); overflow: hidden; margin-bottom: 10px; }
-.tab { flex: 1; padding: 8px 0; text-align: center; font-size: 11px; color: var(--text2); cursor: pointer; border: none; background: transparent; font-family: var(--font); font-weight: 500; transition: all 0.15s; }
-.tab.on { background: var(--tg); color: #fff; }
-
-/* Shop grid */
-.shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
-.shop-card { background: var(--card); border-radius: var(--radius); border: 1px solid var(--border); overflow: hidden; cursor: pointer; }
-.shop-img { height: 72px; display: flex; align-items: center; justify-content: center; font-size: 32px; }
-.shop-body { padding: 8px 10px 10px; }
-.shop-name { font-size: 12px; font-weight: 600; color: var(--text); line-height: 1.3; }
-.shop-coins { display: flex; align-items: center; gap: 4px; margin-top: 5px; }
-.shop-cv { font-size: 14px; font-weight: 700; color: #F57F17; }
-.shop-btn { margin-top: 7px; background: var(--tg); color: #fff; border: none; border-radius: 8px; padding: 6px 0; font-size: 11px; font-weight: 600; width: 100%; cursor: pointer; font-family: var(--font); }
-.shop-btn.dis { background: #e8e8e8; color: #aaa; cursor: default; }
-
-/* Rank */
-.rank-card { background: var(--card); border-radius: var(--radius); border: 1px solid var(--border); overflow: hidden; }
-.rank-row { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-bottom: 1px solid var(--border); }
-.rank-row:last-child { border-bottom: none; }
-.rank-row.me { background: var(--blue-bg); }
-.rank-num { font-size: 13px; font-weight: 600; color: var(--text2); min-width: 18px; text-align: center; }
-.rank-av { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; flex-shrink: 0; }
-.rank-name { flex: 1; font-size: 12px; color: var(--text); }
-.rank-coins { font-size: 12px; font-weight: 700; color: #F57F17; }
-
-/* Progress bar */
-.prog-bar { height: 5px; background: rgba(0,0,0,0.06); border-radius: 3px; overflow: hidden; margin-top: 3px; }
-.prog-fill { height: 100%; border-radius: 3px; }
-
-/* Rep bar in dashboard */
-.rep-bar { display: flex; align-items: center; gap: 8px; background: var(--card); border-radius: 10px; padding: 8px 12px; border: 1px solid var(--border); margin-bottom: 6px; }
-.rep-av { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; flex-shrink: 0; }
-.rep-info { flex: 1; }
-.rep-name { font-size: 12px; font-weight: 600; color: var(--text); }
-.rep-pct { font-size: 11px; color: var(--text2); min-width: 32px; text-align: right; }
-
-/* Web dashboard */
-.web-shell { background: var(--card); border-radius: 20px; overflow: hidden; border: 1px solid var(--border); box-shadow: 0 8px 32px rgba(0,0,0,0.1); width: 100%; max-width: 860px; }
-.web-sidebar { width: 200px; background: var(--card); border-right: 1px solid var(--border); flex-shrink: 0; display: flex; flex-direction: column; }
-.web-main { flex: 1; background: var(--bg); overflow: hidden; display: flex; flex-direction: column; min-width: 0; }
-.web-layout { display: flex; min-height: 600px; }
-.web-topbar { background: var(--card); border-bottom: 1px solid var(--border); padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; }
-.web-content { padding: 18px 20px; overflow-y: auto; flex: 1; }
-.web-logo { padding: 16px 18px 12px; border-bottom: 1px solid var(--border); }
-.web-logo-t { font-size: 14px; font-weight: 700; color: var(--text); }
-.web-logo-s { font-size: 10px; color: var(--text2); margin-top: 1px; }
-.web-nav { padding: 10px 0; flex: 1; }
-.web-nav-s { font-size: 9px; font-weight: 700; color: var(--text3); padding: 10px 18px 4px; text-transform: uppercase; letter-spacing: 0.08em; }
-.web-nav-item { display: flex; align-items: center; gap: 9px; padding: 8px 18px; font-size: 12px; color: var(--text2); cursor: pointer; border-left: 2px solid transparent; transition: all 0.1s; }
-.web-nav-item:hover { background: var(--bg); color: var(--text); }
-.web-nav-item.on { background: var(--blue-bg); color: var(--blue); border-left-color: var(--blue); font-weight: 600; }
-.web-metric { background: var(--card); border-radius: 10px; border: 1px solid var(--border); padding: 12px 14px; }
-.web-metric-n { font-size: 24px; font-weight: 700; color: var(--text); }
-.web-metric-l { font-size: 11px; color: var(--text2); margin-top: 2px; }
-.web-metric-d { font-size: 11px; margin-top: 4px; }
-.web-grid-4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-bottom: 16px; }
-.web-card { background: var(--card); border-radius: 12px; border: 1px solid var(--border); padding: 14px; margin-bottom: 12px; }
-.web-card-title { font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 12px; }
-.web-prog-row { margin-bottom: 9px; }
-.web-prog-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--text2); margin-bottom: 3px; }
-
-/* Success screen */
-.success-ico { width: 68px; height: 68px; border-radius: 50%; background: var(--green-bg); display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; }
-
-/* Feedback form */
-.fb-textarea { width: 100%; border: 1px solid #e0e0e0; border-radius: 8px; padding: 9px 11px; font-size: 12px; color: var(--text); font-family: var(--font); resize: none; background: #fafafa; outline: none; }
-.fb-textarea:focus { border-color: var(--tg); }
-.fb-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
-.fb-reward { font-size: 11px; color: #F57F17; font-weight: 600; }
-.fb-send { background: var(--tg); color: #fff; border: none; border-radius: 8px; padding: 8px 16px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: var(--font); }
-
-/* History */
-.hist-row { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-bottom: 1px solid var(--border); }
-.hist-row:last-child { border-bottom: none; }
-.hist-ico { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.hist-info { flex: 1; }
-.hist-name { font-size: 12px; font-weight: 600; color: var(--text); }
-.hist-date { font-size: 10px; color: var(--text2); margin-top: 1px; }
-.hist-amt { font-size: 13px; font-weight: 700; }
-
-/* Transition */
-.screen-fade { animation: fadeIn 0.18s ease; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
-
-/* Scrollbar */
-.screen::-webkit-scrollbar { width: 3px; }
-.screen::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 3px; }
-
-/* Category pills scroll */
-.cat-scroll { display: flex; gap: 6px; margin-bottom: 8px; overflow-x: auto; padding-bottom: 2px; }
-.cat-scroll::-webkit-scrollbar { display: none; }
-.cat-pill { font-size: 11px; padding: 5px 13px; border-radius: 14px; border: 1px solid var(--border); background: var(--card); color: var(--text2); cursor: pointer; white-space: nowrap; font-family: var(--font); font-weight: 500; flex-shrink: 0; transition: all 0.1s; }
-.cat-pill.on { background: var(--tg); color: #fff; border-color: var(--tg); }
-
-/* Event row */
-.ev-row { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-bottom: 1px solid var(--border); }
-.ev-row:last-child { border-bottom: none; }
-.ev-ico { width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-
-.no-select { user-select: none; }
+/* WEB LAYOUT */
+.web-wrap{width:100%;max-width:760px;}
+.web-shell{background:var(--card);border-radius:20px;border:1px solid var(--b);box-shadow:0 12px 40px rgba(0,0,0,.12);overflow:hidden;}
+.web-topbar{background:var(--card);border-bottom:1px solid var(--b);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;}
+.web-content{padding:20px;}
+.web-title{font-size:16px;font-weight:700;color:var(--t);}
+.web-grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;}
+.web-stat{background:var(--bg);border-radius:10px;padding:12px 14px;}
+.web-stat-n{font-size:22px;font-weight:700;color:var(--t);}
+.web-stat-l{font-size:11px;color:var(--t2);margin-top:2px;}
 </style>
 </head>
 <body>
 
-<div class="role-bar no-select">
-  <button class="role-btn on" id="rb-tp" onclick="setRole('tp')">Торговый представитель</button>
-  <button class="role-btn" id="rb-sv" onclick="setRole('sv')">Руководитель</button>
+<!-- NAV -->
+<div class="nav-tabs" style="max-width:480px;">
+  <button class="ntab on" onclick="switchMain('mobile')">📱 Приложение ТП</button>
+  <button class="ntab" onclick="switchMain('web')">🖥 Панель оператора</button>
 </div>
 
-<!-- TP MOBILE APP -->
-<div id="app-tp" class="phone-wrap">
+<!-- ─── MOBILE APP ─── -->
+<div id="main-mobile" class="phone-wrap">
 <div class="phone">
-  <div class="sbar"><span>10:24</span><span>●●●</span></div>
+<div class="sbar"><span>10:41</span><span>●●● 4G</span></div>
 
-  <!-- SCREEN: HOME -->
-  <div id="s-home" class="screen screen-fade" style="padding-bottom:10px;">
-    <div class="hdr" style="display:flex;">
-      <div class="hdr-av">АС</div>
-      <div class="hdr-text"><div class="hdr-title">Field Sales</div><div class="hdr-sub">Асель Сейткали · ТП</div></div>
+<!-- ══ SCREEN: МАРШРУТ ══ -->
+<div id="sc-route" class="fade-in">
+  <div class="hdr">
+    <div class="hdr-text"><div class="ht">Field Sales OS</div><div class="hs">Асель Сейткали · Торговый представитель</div></div>
+  </div>
+  <div class="screen">
+    <div class="sec" style="margin-top:0;">Маршрут · 26 марта</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:12px;">
+      <div class="card card-p" style="text-align:center;"><div style="font-size:20px;font-weight:800;color:var(--tg);">5</div><div style="font-size:10px;color:var(--t2);margin-top:2px;">Выполнено</div></div>
+      <div class="card card-p" style="text-align:center;"><div style="font-size:20px;font-weight:800;color:var(--t);">3</div><div style="font-size:10px;color:var(--t2);margin-top:2px;">Осталось</div></div>
+      <div class="card card-p" style="text-align:center;"><div style="font-size:20px;font-weight:800;color:#e65100;">1</div><div style="font-size:10px;color:var(--t2);margin-top:2px;">Пропущено</div></div>
     </div>
-    <div style="padding:10px 10px 80px;background:var(--bg);flex:1;">
-      <div class="date-chip">Среда, 26 марта</div>
-      <div class="stat-grid stat-grid-3">
-        <div class="stat-card"><div class="stat-n" style="color:var(--tg)">5</div><div class="stat-l">Выполнено</div></div>
-        <div class="stat-card"><div class="stat-n">3</div><div class="stat-l">Осталось</div></div>
-        <div class="stat-card"><div class="stat-n" style="color:#e65100">1</div><div class="stat-l">Пропущено</div></div>
+    <!-- Active outlet -->
+    <div class="card" style="cursor:pointer;border:2px solid var(--tg);" onclick="goScreen('sc-outlet')">
+      <div style="padding:11px 12px;display:flex;align-items:center;gap:10px;">
+        <div style="width:42px;height:42px;border-radius:10px;background:var(--abg);display:flex;align-items:center;justify-content:center;flex-shrink:0;">🏪</div>
+        <div style="flex:1;"><div style="font-size:14px;font-weight:700;color:var(--t);">Магазин «Арман»</div><div style="font-size:11px;color:var(--t2);margin-top:1px;">ул. Байзакова, 14</div></div>
+        <div style="text-align:right;"><div style="font-size:11px;color:var(--t2);">10:00</div><span class="pill pa" style="margin-top:3px;display:block;">Сейчас</span></div>
       </div>
-      <div class="sec-lbl">Маршрут сегодня</div>
-      <div class="rt-card" onclick="goTo('s-client')">
-        <div class="rt-top">
-          <div class="rt-ico" style="background:#fff3e0;"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="3" y="5" width="16" height="14" rx="2" fill="#e65100" opacity=".15"/><rect x="3" y="5" width="16" height="14" rx="2" stroke="#e65100" stroke-width="1.5"/><path d="M7 5V3M15 5V3M3 9h16" stroke="#e65100" stroke-width="1.5" stroke-linecap="round"/></svg></div>
-          <div class="rt-info"><div class="rt-name">Магазин «Арман»</div><div class="rt-addr">ул. Байзакова, 14</div></div>
-          <div class="rt-right"><div class="rt-time">10:00</div><span class="pill pill-amber">Сейчас</span></div>
-        </div>
-        <div class="rt-dist"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="5" r="2.5" stroke="var(--tg)" stroke-width="1.2"/><path d="M6 10C6 10 2 7 2 5a4 4 0 018 0c0 2-4 5-4 5z" stroke="var(--tg)" stroke-width="1.2" fill="none"/></svg>320 м · ~4 мин</div>
-        <div class="rt-bar"><div class="rt-fill" style="width:0%;background:var(--tg);"></div></div>
+      <div style="padding:4px 12px 10px;font-size:11px;color:var(--tg);display:flex;align-items:center;gap:4px;">📍 320 м · ~4 мин пешком</div>
+    </div>
+    <!-- Done outlet -->
+    <div class="card" onclick="goScreen('sc-order-view')">
+      <div style="padding:11px 12px;display:flex;align-items:center;gap:10px;cursor:pointer;">
+        <div style="width:42px;height:42px;border-radius:10px;background:var(--gbg);display:flex;align-items:center;justify-content:center;flex-shrink:0;">🏬</div>
+        <div style="flex:1;"><div style="font-size:14px;font-weight:700;color:var(--t);">Береке Маркет</div><div style="font-size:11px;color:var(--t2);margin-top:1px;">пр. Абая, 88</div></div>
+        <div style="text-align:right;"><div style="font-size:11px;color:var(--t2);">09:15</div><span class="pill pg" style="margin-top:3px;display:block;">Выполнен</span></div>
       </div>
-      <div class="rt-card">
-        <div class="rt-top">
-          <div class="rt-ico" style="background:var(--green-bg);"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="3" y="5" width="16" height="14" rx="2" fill="#3B6D11" opacity=".15"/><rect x="3" y="5" width="16" height="14" rx="2" stroke="#3B6D11" stroke-width="1.5"/><path d="M7 5V3M15 5V3M3 9h16" stroke="#3B6D11" stroke-width="1.5" stroke-linecap="round"/></svg></div>
-          <div class="rt-info"><div class="rt-name">Береке Маркет</div><div class="rt-addr">пр. Абая, 88</div></div>
-          <div class="rt-right"><div class="rt-time">11:30</div><span class="pill pill-green">Выполнен</span></div>
-        </div>
-        <div class="rt-bar"><div class="rt-fill" style="width:100%;background:#3B6D11;"></div></div>
+    </div>
+    <!-- Waiting -->
+    <div class="card">
+      <div style="padding:11px 12px;display:flex;align-items:center;gap:10px;">
+        <div style="width:42px;height:42px;border-radius:10px;background:#f5f5f5;display:flex;align-items:center;justify-content:center;flex-shrink:0;">🏪</div>
+        <div style="flex:1;"><div style="font-size:14px;font-weight:600;color:var(--t2);">Киоск №12</div><div style="font-size:11px;color:var(--t3);margin-top:1px;">ул. Толе би, 5</div></div>
+        <div style="text-align:right;"><div style="font-size:11px;color:var(--t3);">13:00</div><span class="pill" style="background:#f0f0f0;color:#999;margin-top:3px;display:block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;">Следующий</span></div>
       </div>
-      <div class="rt-card">
-        <div class="rt-top">
-          <div class="rt-ico" style="background:#f5f5f5;"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="3" y="5" width="16" height="14" rx="2" stroke="#ccc" stroke-width="1.5"/><path d="M7 5V3M15 5V3M3 9h16" stroke="#ccc" stroke-width="1.5" stroke-linecap="round"/></svg></div>
-          <div class="rt-info"><div class="rt-name">Киоск №12</div><div class="rt-addr">ул. Толе би, 5</div></div>
-          <div class="rt-right"><div class="rt-time">13:00</div><span class="pill pill-gray">Следующий</span></div>
-        </div>
-        <div class="rt-bar"><div class="rt-fill" style="width:0%"></div></div>
-      </div>
-      <div class="rt-card">
-        <div class="rt-top">
-          <div class="rt-ico" style="background:#f5f5f5;"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="3" y="5" width="16" height="14" rx="2" stroke="#ccc" stroke-width="1.5"/><path d="M7 5V3M15 5V3M3 9h16" stroke="#ccc" stroke-width="1.5" stroke-linecap="round"/></svg></div>
-          <div class="rt-info"><div class="rt-name">Жулдыз Мини-маркет</div><div class="rt-addr">ул. Гоголя, 22</div></div>
-          <div class="rt-right"><div class="rt-time">14:30</div><span class="pill pill-gray">Следующий</span></div>
-        </div>
-        <div class="rt-bar"><div class="rt-fill" style="width:0%"></div></div>
-      </div>
+    </div>
+    <!-- ADD NEW OUTLET BUTTON -->
+    <div style="border:2px dashed rgba(42,171,238,.3);border-radius:var(--r);padding:14px;text-align:center;cursor:pointer;margin-top:4px;background:rgba(42,171,238,.03);" onclick="goScreen('sc-new-outlet')">
+      <div style="font-size:13px;font-weight:700;color:var(--tg);">+ Добавить новую торговую точку</div>
+      <div style="font-size:11px;color:var(--t2);margin-top:3px;">Завести новый объект в систему</div>
     </div>
   </div>
-
-  <!-- SCREEN: CLIENT PROFILE -->
-  <div id="s-client" class="screen screen-fade" style="display:none;">
-    <div class="hdr"><div class="hdr-back" onclick="goTo('s-home')">‹</div><div class="hdr-av" style="background:#e65100;">АР</div><div class="hdr-text"><div class="hdr-title">Магазин «Арман»</div><div class="hdr-sub">ул. Байзакова, 14</div></div></div>
-    <div style="padding:10px;background:var(--bg);flex:1;">
-      <div class="card card-p" style="margin-bottom:8px;">
-        <div class="tags">
-          <span class="tag" style="background:var(--blue-bg);color:var(--blue);">Магазин</span>
-          <span class="tag" style="background:var(--green-bg);color:var(--green);">Активный</span>
-          <span class="tag" style="background:var(--purple-bg);color:var(--purple);">Хозяин-продавец</span>
-          <span class="tag" style="background:var(--amber-bg);color:var(--amber);">Жилой район</span>
-        </div>
-      </div>
-      <div class="ai-card">
-        <div class="ai-hdr"><div class="ai-dot"></div><div class="ai-title">AI — лучшее время</div></div>
-        <div class="ai-body">Ерлан на месте до 12:00. Понедельник и вторник — пиковые дни продаж. Сейчас хорошая ликвидность.</div>
-      </div>
-      <div class="warn-card">
-        <div class="warn-hdr"><div class="warn-dot"></div><div class="warn-title">Внимание</div></div>
-        <div class="warn-body">День рождения Ерлана через 3 дня (29 марта). Хороший повод для визита.</div>
-      </div>
-      <div class="sec-lbl">О клиенте</div>
-      <div class="card">
-        <div class="irow"><span class="ik">Тип</span><span class="iv">Хозяин-продавец</span></div>
-        <div class="irow"><span class="ik">Контакт</span><span class="iv">Ерлан +7 777 123 45 67</span></div>
-        <div class="irow"><span class="ik">Форма оплаты</span><span class="iv">Отсрочка 14 дней</span></div>
-        <div class="irow"><span class="ik">Тип цены</span><span class="iv"><span class="pill pill-blue">Оптовая Б</span></span></div>
-        <div class="irow"><span class="ik">Долг</span><span class="iv" style="color:var(--red);">87 000 тг</span></div>
-        <div class="irow"><span class="ik">Последний заказ</span><span class="iv">18 марта · 38 200 тг</span></div>
-      </div>
-      <button class="big-btn" style="margin-top:4px;" onclick="goTo('s-checkin')">Начать визит — Чек-ин</button>
-    </div>
+  <div class="bnav">
+    <div class="bnav-btn on" onclick="goScreen('sc-route')"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="2" y="11" width="8" height="9" rx="1.5" stroke="var(--tg)" stroke-width="1.5"/><rect x="7" y="7" width="8" height="13" rx="1.5" stroke="var(--tg)" stroke-width="1.5"/><rect x="12" y="4" width="8" height="16" rx="1.5" stroke="var(--tg)" stroke-width="1.5"/></svg><span class="bnav-lbl" style="color:var(--tg);">Маршрут</span></div>
+    <div class="bnav-btn" onclick="goScreen('sc-new-outlet')"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="9" r="3.5" stroke="#bbb" stroke-width="1.5"/><path d="M3 19c0-3 3-5 8-5s8 2 8 5" stroke="#bbb" stroke-width="1.5" fill="none"/><circle cx="17" cy="5" r="3" fill="var(--tg)"/><path d="M17 3.5v3M15.5 5h3" stroke="#fff" stroke-width="1.4" stroke-linecap="round"/></svg><span class="bnav-lbl">Клиенты+</span></div>
+    <div class="bnav-btn" onclick="goScreen('sc-order-view')"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="3" y="3" width="16" height="16" rx="3" stroke="#bbb" stroke-width="1.5"/><path d="M7 11h8M7 7h8M7 15h4" stroke="#bbb" stroke-width="1.5" stroke-linecap="round"/></svg><span class="bnav-lbl">Заказы</span></div>
+    <div class="bnav-btn"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="8" stroke="#bbb" stroke-width="1.5"/><circle cx="11" cy="11" r="3" fill="#FFD700"/></svg><span class="bnav-lbl">Баланс</span></div>
   </div>
+</div>
 
-  <!-- SCREEN: CHECK-IN -->
-  <div id="s-checkin" class="screen screen-fade" style="display:none;">
-    <div class="hdr"><div class="hdr-back" onclick="goTo('s-client')">‹</div><div class="hdr-text"><div class="hdr-title">Чек-ин</div><div class="hdr-sub">Магазин «Арман»</div></div></div>
-    <div style="padding:10px;background:var(--bg);">
-      <div class="card" style="margin-bottom:8px;">
-        <div class="map-mock">
-          <div class="map-grid-h" style="top:35%"></div><div class="map-grid-h" style="top:65%"></div>
-          <div class="map-grid-v" style="left:30%"></div><div class="map-grid-v" style="left:70%"></div>
-          <div class="map-road-h" style="top:52%"></div><div class="map-road-v" style="left:48%"></div>
-          <div class="map-ring2"></div><div class="map-ring1"></div>
-          <div class="map-pin"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="4" fill="#fff"/></svg></div>
-        </div>
-        <div class="irow"><span class="ik">Расстояние</span><span class="iv" style="color:var(--tg);">320 м — в радиусе ✓</span></div>
-        <div class="irow"><span class="ik">Геофенсинг</span><span class="iv" style="color:var(--green);">50 м — пройден</span></div>
-        <div class="irow"><span class="ik">Время</span><span class="iv">10:24</span></div>
-      </div>
-      <div class="ai-card">
-        <div class="ai-hdr"><div class="ai-dot"></div><div class="ai-title">Подсказка к визиту</div></div>
-        <div class="ai-body">Предложите Lay's Сметана — новинка. Прошлый раз брали 12 Coca-Cola, возможно нужно пополнить.</div>
-      </div>
-      <button class="big-btn" onclick="goTo('s-order')">Открыть каталог — оформить заказ</button>
-      <button class="big-btn-outline" onclick="goTo('s-home')">Визит не состоялся</button>
+<!-- ══ SCREEN: OUTLET CARD ══ -->
+<div id="sc-outlet" style="display:none;" class="fade-in">
+  <div class="hdr"><div class="hdr-back" onclick="goScreen('sc-route')">‹</div><div class="hdr-text"><div class="ht">Магазин «Арман»</div><div class="hs">ул. Байзакова, 14 · Активный</div></div></div>
+  <div class="screen">
+    <div class="ai-card">
+      <div class="ai-hdr"><div class="ai-dot"></div><div class="ai-title">AI — лучшее время визита</div></div>
+      <div class="ai-body">Ерлан на месте до 12:00. Сейчас хорошая ликвидность — начало недели после закупки. День рождения через 3 дня!</div>
     </div>
+    <div class="card">
+      <div class="irow"><span class="ik">Тип управления</span><span class="iv">Хозяин-продавец</span></div>
+      <div class="irow"><span class="ik">Контакт</span><span class="iv">Ерлан · +7 777 123 45 67</span></div>
+      <div class="irow"><span class="ik">Тип цены</span><span class="iv"><span class="pill pb">Оптовая Б</span></span></div>
+      <div class="irow"><span class="ik">Форма оплаты</span><span class="iv">Отсрочка 14 дней</span></div>
+      <div class="irow"><span class="ik">Долг</span><span class="iv red">87 000 тг</span></div>
+      <div class="irow"><span class="ik">Последний заказ</span><span class="iv">18 марта · 38 200 тг</span></div>
+    </div>
+    <button class="btn-primary" onclick="goScreen('sc-order')">Начать визит → Оформить заказ</button>
   </div>
+</div>
 
-  <!-- SCREEN: ORDER -->
-  <div id="s-order" class="screen screen-fade" style="display:none;">
-    <div class="hdr"><div class="hdr-back" onclick="goTo('s-checkin')">‹</div><div class="hdr-text"><div class="hdr-title">Оформить заказ</div><div class="hdr-sub">«Арман» · Цена: Оптовая Б</div></div></div>
-    <div style="padding:10px;background:var(--bg);">
-      <div class="ai-card" style="margin-bottom:8px;">
-        <div class="ai-hdr"><div class="ai-dot"></div><div class="ai-title">AI — прошлый заказ</div></div>
-        <div class="ai-body">18 марта: Coca-Cola ×12, Sprite ×6, Fanta ×4. Повторить?</div>
-        <div class="ai-chips"><div class="chip">Повторить</div><div class="chip">Что заканчивается</div></div>
-      </div>
-      <div class="cat-scroll">
-        <div class="cat-pill on">Все</div><div class="cat-pill">Напитки</div><div class="cat-pill">Снеки</div><div class="cat-pill">Молочное</div>
-      </div>
-      <div class="sku-card">
-        <div class="sku-top">
-          <div class="sku-img" style="background:#E3F2FD;"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="7" y="3" width="8" height="16" rx="3" fill="#90CAF9" stroke="#1565C0" stroke-width="1.2"/></svg></div>
-          <div class="sku-meta"><div class="sku-name">Coca-Cola 0.5л <span class="pill pill-purple" style="font-size:9px;">Хит</span></div><div class="sku-sub">арт. CC050</div></div>
-          <div class="sku-price"><div class="sku-pval">180 тг</div><div class="sku-ptype">Опт Б</div></div>
-        </div>
-        <div class="sku-foot">
-          <div class="stock-row"><div class="sdot" style="background:#3B6D11;"></div><span style="font-size:10px;color:var(--text2);">240 шт</span></div>
-          <div class="qty-wrap"><button class="qty-btn m" onclick="chg(0,-1)">−</button><span class="qty-val" id="q0">12</span><button class="qty-btn p" onclick="chg(0,1)">+</button></div>
-        </div>
-      </div>
-      <div class="sku-card">
-        <div class="sku-top">
-          <div class="sku-img" style="background:#E8F5E9;"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="7" y="3" width="8" height="16" rx="3" fill="#A5D6A7" stroke="#2E7D32" stroke-width="1.2"/></svg></div>
-          <div class="sku-meta"><div class="sku-name">Sprite 0.5л <span class="pill pill-green" style="font-size:9px;">Брал</span></div><div class="sku-sub">арт. SP050</div></div>
-          <div class="sku-price"><div class="sku-pval">175 тг</div><div class="sku-ptype">Опт Б</div></div>
-        </div>
-        <div class="sku-foot">
-          <div class="stock-row"><div class="sdot" style="background:#3B6D11;"></div><span style="font-size:10px;color:var(--text2);">180 шт</span></div>
-          <div class="qty-wrap"><button class="qty-btn m" onclick="chg(1,-1)">−</button><span class="qty-val" id="q1">6</span><button class="qty-btn p" onclick="chg(1,1)">+</button></div>
-        </div>
-      </div>
-      <div class="sku-card">
-        <div class="sku-top">
-          <div class="sku-img" style="background:#FFF3E0;"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="7" y="3" width="8" height="16" rx="3" fill="#FFCC80" stroke="#E65100" stroke-width="1.2"/></svg></div>
-          <div class="sku-meta"><div class="sku-name">Fanta Orange 0.5л</div><div class="sku-sub">арт. FO050</div></div>
-          <div class="sku-price"><div class="sku-pval">178 тг</div><div class="sku-ptype">Опт Б</div></div>
-        </div>
-        <div class="sku-foot">
-          <div class="stock-row"><div class="sdot" style="background:#EF9F27;"></div><span style="font-size:10px;color:#854F0B;">24 шт — мало!</span></div>
-          <div class="qty-wrap"><button class="qty-btn m" onclick="chg(2,-1)">−</button><span class="qty-val" id="q2">4</span><button class="qty-btn p" onclick="chg(2,1)">+</button></div>
-        </div>
-      </div>
-      <div class="sku-card">
-        <div class="sku-top">
-          <div class="sku-img" style="background:#F3E5F5;"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="7" y="3" width="8" height="16" rx="3" fill="#CE93D8" stroke="#7B1FA2" stroke-width="1.2"/></svg></div>
-          <div class="sku-meta"><div class="sku-name">Lay's Сметана 100г <span class="pill pill-amber" style="font-size:9px;">Новинка</span></div><div class="sku-sub">арт. LY100</div></div>
-          <div class="sku-price"><div class="sku-pval">290 тг</div><div class="sku-ptype">Опт Б</div></div>
-        </div>
-        <div class="sku-foot">
-          <div class="stock-row"><div class="sdot" style="background:#3B6D11;"></div><span style="font-size:10px;color:var(--text2);">96 шт</span></div>
-          <div class="qty-wrap"><button class="qty-btn m" onclick="chg(3,-1)">−</button><span class="qty-val" id="q3">0</span><button class="qty-btn p" onclick="chg(3,1)">+</button></div>
-        </div>
-      </div>
-      <div class="cart-bar" onclick="goTo('s-success')">
-        <div class="cart-left"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M2 2h2l2.4 8.4a1 1 0 001 .6h6.2a1 1 0 001-.76l1.4-5.24H4" stroke="#fff" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="7" cy="15" r="1" fill="#fff"/><circle cx="13" cy="15" r="1" fill="#fff"/></svg><span class="cart-badge" id="cnt">22 шт</span><span class="cart-lbl">Отправить заявку</span></div>
-        <span class="cart-total" id="ctotal">5 846 тг</span>
+<!-- ══ SCREEN: ORDER FORM ══ -->
+<div id="sc-order" style="display:none;" class="fade-in">
+  <div class="hdr"><div class="hdr-back" onclick="goScreen('sc-outlet')">‹</div><div class="hdr-text"><div class="ht">Оформить заказ</div><div class="hs">«Арман» · Цена: Оптовая Б</div></div></div>
+  <div class="screen">
+    <div class="ai-card">
+      <div class="ai-hdr"><div class="ai-dot"></div><div class="ai-title">AI · прошлый заказ 18 марта</div></div>
+      <div class="ai-body">Coca-Cola ×12, Sprite ×6, Fanta ×4. Повторить?</div>
+      <div style="display:flex;gap:6px;margin-top:7px;">
+        <button class="btn-sm btn-tg" onclick="repeatOrder()">Повторить заказ</button>
+        <button class="btn-sm btn-outline">Что заканчивается</button>
       </div>
     </div>
-  </div>
-
-  <!-- SCREEN: SUCCESS -->
-  <div id="s-success" class="screen screen-fade" style="display:none;">
-    <div class="hdr"><div class="hdr-text" style="text-align:center;padding:2px 0;"><div class="hdr-title">Визит завершён</div><div class="hdr-sub">Магазин «Арман»</div></div></div>
-    <div style="padding:16px;background:var(--bg);display:flex;flex-direction:column;align-items:center;text-align:center;">
-      <div style="margin:20px 0 14px;">
-        <div class="success-ico">
-          <svg width="34" height="34" viewBox="0 0 34 34" fill="none"><circle cx="17" cy="17" r="14" fill="#C8E6C9"/><path d="M10 17l5 5 9-9" stroke="#2e7d32" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </div>
-        <div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:6px;">Заявка отправлена!</div>
-        <div style="font-size:13px;color:var(--text2);line-height:1.5;">Визит успешно завершён.<br>Оператор получил заявку.</div>
-      </div>
-      <div class="card" style="width:100%;margin-bottom:16px;">
-        <div class="irow"><span class="ik">Время</span><span class="iv">10:24 — 10:31</span></div>
-        <div class="irow"><span class="ik">Длительность</span><span class="iv">7 минут</span></div>
-        <div class="irow"><span class="ik">Сумма заказа</span><span class="iv" style="color:var(--tg);" id="final-sum">5 846 тг</span></div>
-        <div class="irow"><span class="ik">Бонусы</span><span class="iv" style="color:#F57F17;">+35 ₵ SalesCoins</span></div>
-      </div>
-      <button class="big-btn" onclick="goTo('s-home')">К следующей точке →</button>
+    <div class="card">
+      <div class="order-item"><div class="oi-ico" style="background:#e3f2fd;">🥤</div><div class="oi-info"><div class="oi-name">Coca-Cola 0.5л</div><div class="oi-sub">арт. CC050 · 240 шт на складе</div></div><div class="oi-amt"><div class="oi-qty">×<span id="q0">0</span></div><div style="display:flex;align-items:center;gap:5px;margin-top:3px;"><button style="width:26px;height:26px;border-radius:50%;border:none;background:#f0f4f7;color:#666;font-size:16px;cursor:pointer;font-family:var(--f);" onclick="chg(0,-1)">−</button><button style="width:26px;height:26px;border-radius:50%;border:none;background:var(--tg);color:#fff;font-size:16px;cursor:pointer;font-family:var(--f);" onclick="chg(0,1)">+</button></div></div></div>
+      <div class="order-item"><div class="oi-ico" style="background:#e8f5e9;">🥤</div><div class="oi-info"><div class="oi-name">Sprite 0.5л</div><div class="oi-sub">арт. SP050 · 180 шт на складе</div></div><div class="oi-amt"><div class="oi-qty">×<span id="q1">0</span></div><div style="display:flex;align-items:center;gap:5px;margin-top:3px;"><button style="width:26px;height:26px;border-radius:50%;border:none;background:#f0f4f7;color:#666;font-size:16px;cursor:pointer;font-family:var(--f);" onclick="chg(1,-1)">−</button><button style="width:26px;height:26px;border-radius:50%;border:none;background:var(--tg);color:#fff;font-size:16px;cursor:pointer;font-family:var(--f);" onclick="chg(1,1)">+</button></div></div></div>
+      <div class="order-item"><div class="oi-ico" style="background:#fff3e0;">🍊</div><div class="oi-info"><div class="oi-name">Fanta Orange 0.5л</div><div class="oi-sub">арт. FO050 · ⚠️ 24 шт (мало)</div></div><div class="oi-amt"><div class="oi-qty">×<span id="q2">0</span></div><div style="display:flex;align-items:center;gap:5px;margin-top:3px;"><button style="width:26px;height:26px;border-radius:50%;border:none;background:#f0f4f7;color:#666;font-size:16px;cursor:pointer;font-family:var(--f);" onclick="chg(2,-1)">−</button><button style="width:26px;height:26px;border-radius:50%;border:none;background:var(--tg);color:#fff;font-size:16px;cursor:pointer;font-family:var(--f);" onclick="chg(2,1)">+</button></div></div></div>
+      <div class="order-item"><div class="oi-ico" style="background:#f3e5f5;">🍟</div><div class="oi-info"><div class="oi-name">Lay's Сметана 100г</div><div class="oi-sub">арт. LY100 · 96 шт · Новинка</div></div><div class="oi-amt"><div class="oi-qty">×<span id="q3">0</span></div><div style="display:flex;align-items:center;gap:5px;margin-top:3px;"><button style="width:26px;height:26px;border-radius:50%;border:none;background:#f0f4f7;color:#666;font-size:16px;cursor:pointer;font-family:var(--f);" onclick="chg(3,-1)">−</button><button style="width:26px;height:26px;border-radius:50%;border:none;background:var(--tg);color:#fff;font-size:16px;cursor:pointer;font-family:var(--f);" onclick="chg(3,1)">+</button></div></div></div>
     </div>
-  </div>
-
-  <!-- SCREEN: BALANCE -->
-  <div id="s-balance" class="screen screen-fade" style="display:none;">
-    <div class="hdr"><div class="hdr-av">АС</div><div class="hdr-text"><div class="hdr-title">Мой баланс</div><div class="hdr-sub">SalesCoins</div></div></div>
-    <div style="padding:10px;background:var(--bg);">
-      <div class="coin-hero">
-        <div class="coin-ico">₵</div>
-        <div class="coin-bal">1 275</div>
-        <div class="coin-lbl">SalesCoins · Ваш баланс</div>
-        <div class="coin-change">+35 ₵ за сегодня</div>
-      </div>
-      <div class="tab-row">
-        <button class="tab on" id="bt1" onclick="bTab(1)">Заработать</button>
-        <button class="tab" id="bt2" onclick="bTab(2)">Магазин</button>
-        <button class="tab" id="bt3" onclick="bTab(3)">Рейтинг</button>
-      </div>
-      <div id="bp1">
-        <div class="sec-lbl">Источники коинов</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px;">
-          <div class="card card-p"><div style="background:var(--blue-bg);width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;margin-bottom:6px;"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5" stroke="var(--blue)" stroke-width="1.3"/><path d="M4.5 7l2 2 3-3" stroke="var(--blue)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div style="font-size:12px;font-weight:600;color:var(--text);">Визит по регламенту</div><div style="font-size:10px;color:var(--text2);margin-top:2px;">GPS + время</div><div style="font-size:12px;font-weight:700;color:#F57F17;margin-top:5px;">+10 ₵</div></div>
-          <div class="card card-p"><div style="background:var(--green-bg);width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;margin-bottom:6px;"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="2" y="3" width="10" height="9" rx="1.5" stroke="var(--green)" stroke-width="1.3"/></svg></div><div style="font-size:12px;font-weight:600;color:var(--text);">Продажа в визите</div><div style="font-size:10px;color:var(--text2);margin-top:2px;">Заказ от 500 тг</div><div style="font-size:12px;font-weight:700;color:#F57F17;margin-top:5px;">+25 ₵</div></div>
-          <div class="card card-p"><div style="background:var(--amber-bg);width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;margin-bottom:6px;"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="3" width="12" height="9" rx="1.5" stroke="var(--amber)" stroke-width="1.3"/><path d="M1 7h12" stroke="var(--amber)" stroke-width="1.2"/></svg></div><div style="font-size:12px;font-weight:600;color:var(--text);">Финансовая дисциплина</div><div style="font-size:10px;color:var(--text2);margin-top:2px;">Нет просрочки 30+ дн</div><div style="font-size:12px;font-weight:700;color:#F57F17;margin-top:5px;">+15 ₵</div></div>
-          <div class="card card-p"><div style="background:var(--purple-bg);width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;margin-bottom:6px;"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v3M7 10v3M1 7h3M10 7h3" stroke="var(--purple)" stroke-width="1.3" stroke-linecap="round"/><circle cx="7" cy="7" r="2.5" stroke="var(--purple)" stroke-width="1.3"/></svg></div><div style="font-size:12px;font-weight:600;color:var(--text);">Идея принята</div><div style="font-size:10px;color:var(--text2);margin-top:2px;">Обратная связь</div><div style="font-size:12px;font-weight:700;color:#F57F17;margin-top:5px;">+50 ₵</div></div>
-        </div>
-        <div class="sec-lbl">Последние начисления</div>
-        <div class="card">
-          <div class="hist-row"><div class="hist-ico" style="background:var(--green-bg);"><svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5" stroke="var(--green)" stroke-width="1.2"/><path d="M4 6.5l2 2 3.5-3.5" stroke="var(--green)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="hist-info"><div class="hist-name">Визит + продажа — «Арман»</div><div class="hist-date">Сегодня, 10:31</div></div><div class="hist-amt" style="color:var(--green);">+35 ₵</div></div>
-          <div class="hist-row"><div class="hist-ico" style="background:var(--purple-bg);"><svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1.5v2.5M6.5 9v2.5M1.5 6.5H4M9 6.5h2.5" stroke="var(--purple)" stroke-width="1.2" stroke-linecap="round"/><circle cx="6.5" cy="6.5" r="2" stroke="var(--purple)" stroke-width="1.2"/></svg></div><div class="hist-info"><div class="hist-name">Идея принята — новый отчёт</div><div class="hist-date">Вчера, 17:22</div></div><div class="hist-amt" style="color:var(--green);">+50 ₵</div></div>
-          <div class="hist-row"><div class="hist-ico" style="background:var(--red-bg);"><svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5" stroke="var(--red)" stroke-width="1.2"/><path d="M4.5 4.5l4 4M8.5 4.5l-4 4" stroke="var(--red)" stroke-width="1.2" stroke-linecap="round"/></svg></div><div class="hist-info"><div class="hist-name">Списание — наушники JBL</div><div class="hist-date">20 марта</div></div><div class="hist-amt" style="color:var(--red);">−800 ₵</div></div>
-        </div>
-        <div class="sec-lbl">Предложить идею</div>
-        <div class="card card-p">
-          <textarea class="fb-textarea" rows="3" placeholder="Ваша идея для команды или процессов..."></textarea>
-          <div class="fb-foot"><div class="fb-reward">+50 ₵ за принятую идею</div><button class="fb-send">Отправить</button></div>
-        </div>
-      </div>
-      <div id="bp2" style="display:none;">
-        <div class="sec-lbl">Обменять на награды</div>
-        <div class="shop-grid">
-          <div class="shop-card"><div class="shop-img" style="background:#FFF8E1;">🎒</div><div class="shop-body"><div class="shop-name">Рюкзак Nike</div><div class="shop-coins"><span style="font-size:12px;">₵</span><span class="shop-cv">300</span></div><button class="shop-btn">Обменять</button></div></div>
-          <div class="shop-card"><div class="shop-img" style="background:#E8F5E9;">🎧</div><div class="shop-body"><div class="shop-name">Наушники JBL</div><div class="shop-coins"><span style="font-size:12px;">₵</span><span class="shop-cv">800</span></div><button class="shop-btn">Обменять</button></div></div>
-          <div class="shop-card"><div class="shop-img" style="background:#E3F2FD;">🖥️</div><div class="shop-body"><div class="shop-name">Сертификат 5 000 тг</div><div class="shop-coins"><span style="font-size:12px;">₵</span><span class="shop-cv">500</span></div><button class="shop-btn">Обменять</button></div></div>
-          <div class="shop-card"><div class="shop-img" style="background:#FCE4EC;">✏️</div><div class="shop-body"><div class="shop-name">Канцелярия</div><div class="shop-coins"><span style="font-size:12px;">₵</span><span class="shop-cv">80</span></div><button class="shop-btn">Обменять</button></div></div>
-          <div class="shop-card"><div class="shop-img" style="background:#F3E5F5;">🔋</div><div class="shop-body"><div class="shop-name">Пауэрбанк</div><div class="shop-coins"><span style="font-size:12px;">₵</span><span class="shop-cv">1 200</span></div><button class="shop-btn dis">Не хватает 75 ₵</button></div></div>
-          <div class="shop-card"><div class="shop-img" style="background:#E8F5E9;">☕</div><div class="shop-body"><div class="shop-name">Чайник Tefal</div><div class="shop-coins"><span style="font-size:12px;">₵</span><span class="shop-cv">2 500</span></div><button class="shop-btn dis">Накопить</button></div></div>
-        </div>
-      </div>
-      <div id="bp3" style="display:none;">
-        <div class="sec-lbl">Рейтинг команды — март</div>
-        <div class="rank-card">
-          <div class="rank-row"><div class="rank-num" style="color:#F57F17;">1</div><div class="rank-av" style="background:var(--amber-bg);color:var(--amber);">БД</div><div class="rank-name">Бекзат Дуйсенов</div><div class="rank-coins">2 140 ₵</div></div>
-          <div class="rank-row"><div class="rank-num" style="color:#888;">2</div><div class="rank-av" style="background:var(--purple-bg);color:var(--purple);">МИ</div><div class="rank-name">Мадина Ибрагимова</div><div class="rank-coins">1 870 ₵</div></div>
-          <div class="rank-row"><div class="rank-num" style="color:#8D6E63;">3</div><div class="rank-av" style="background:var(--green-bg);color:var(--green);">НА</div><div class="rank-name">Назгуль Ахметова</div><div class="rank-coins">1 530 ₵</div></div>
-          <div class="rank-row me"><div class="rank-num" style="color:var(--blue);">4</div><div class="rank-av" style="background:var(--tg);color:#fff;">АС</div><div class="rank-name" style="color:var(--blue);font-weight:600;">Асель (вы)</div><div class="rank-coins">1 275 ₵</div></div>
-          <div class="rank-row"><div class="rank-num">5</div><div class="rank-av" style="background:var(--red-bg);color:var(--red);">ДК</div><div class="rank-name">Данияр Касымов</div><div class="rank-coins">890 ₵</div></div>
-        </div>
-        <div style="background:var(--blue-bg);border-radius:10px;padding:10px 12px;margin-top:8px;border:1px solid var(--blue-border);">
-          <div style="font-size:12px;font-weight:600;color:var(--blue);margin-bottom:2px;">До 3-го места: 255 ₵</div>
-          <div style="font-size:11px;color:#1a6fa0;">Ещё ~10 визитов с продажами — и обгоните Назгуль!</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Bottom nav (for all TP screens) -->
-  <div class="bnav" id="bnav-tp">
-    <div class="bnav-btn active" id="nav-home" onclick="navTo('home')">
-      <svg viewBox="0 0 22 22" fill="none"><rect x="2" y="11" width="8" height="9" rx="1.5" stroke="var(--tg)" stroke-width="1.5"/><rect x="7" y="7" width="8" height="13" rx="1.5" stroke="var(--tg)" stroke-width="1.5"/><rect x="12" y="4" width="8" height="16" rx="1.5" stroke="var(--tg)" stroke-width="1.5"/></svg>
-      <span class="bnav-lbl" style="color:var(--tg);">Маршрут</span>
-    </div>
-    <div class="bnav-btn" id="nav-clients" onclick="navTo('clients')">
-      <svg viewBox="0 0 22 22" fill="none"><circle cx="11" cy="9" r="3.5" stroke="#aaa" stroke-width="1.5"/><path d="M3 19c0-3 3-5 8-5s8 2 8 5" stroke="#aaa" stroke-width="1.5" fill="none"/></svg>
-      <span class="bnav-lbl">Клиенты</span>
-    </div>
-    <div class="bnav-btn" id="nav-orders" onclick="navTo('orders')">
-      <svg viewBox="0 0 22 22" fill="none"><rect x="3" y="3" width="16" height="16" rx="3" stroke="#aaa" stroke-width="1.5"/><path d="M7 11h8M7 7h8M7 15h4" stroke="#aaa" stroke-width="1.5" stroke-linecap="round"/></svg>
-      <span class="bnav-lbl">Заказы</span>
-    </div>
-    <div class="bnav-btn" id="nav-balance" onclick="navTo('balance')">
-      <svg viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="8" stroke="#aaa" stroke-width="1.5"/><circle cx="11" cy="11" r="3" fill="#FFD700"/></svg>
-      <span class="bnav-lbl">Баланс</span>
+    <div class="card card-p" style="display:flex;justify-content:space-between;align-items:center;">
+      <div><div style="font-size:12px;color:var(--t2);">Итого позиций: <span id="cnt">0</span></div><div style="font-size:18px;font-weight:800;color:var(--t);margin-top:2px;" id="ctotal">0 тг</div></div>
+      <button class="btn-sm btn-tg" onclick="goScreen('sc-order-confirm')" style="font-size:14px;padding:10px 18px;">Далее →</button>
     </div>
   </div>
 </div>
+
+<!-- ══ SCREEN: ORDER CONFIRM ══ -->
+<div id="sc-order-confirm" style="display:none;" class="fade-in">
+  <div class="hdr"><div class="hdr-back" onclick="goScreen('sc-order')">‹</div><div class="hdr-text"><div class="ht">Подтверждение заявки</div><div class="hs">Проверьте перед отправкой</div></div></div>
+  <div class="screen">
+    <div class="card">
+      <div class="irow"><span class="ik">Клиент</span><span class="iv">Магазин «Арман»</span></div>
+      <div class="irow"><span class="ik">ТП</span><span class="iv">Асель Сейткали</span></div>
+      <div class="irow"><span class="ik">Дата</span><span class="iv">26 марта 2025</span></div>
+      <div class="irow"><span class="ik">Тип цены</span><span class="iv"><span class="pill pb">Оптовая Б</span></span></div>
+      <div class="irow"><span class="ik">Позиций</span><span class="iv" id="conf-cnt">0</span></div>
+      <div class="irow"><span class="ik">Сумма</span><span class="iv blue" id="conf-total">0 тг</span></div>
+      <div class="irow"><span class="ik">Форма оплаты</span><span class="iv">Отсрочка 14 дней</span></div>
+    </div>
+    <div class="sec">Состав заявки</div>
+    <div class="card" id="confirm-items"></div>
+    <div class="warn-card" style="margin-top:8px;">
+      <div style="font-size:11px;font-weight:700;color:var(--amber);margin-bottom:3px;">⚠️ Текущий долг клиента</div>
+      <div style="font-size:12px;color:#bf6e00;">87 000 тг · лимит 350 000 тг · 74% использовано</div>
+    </div>
+    <button class="btn-primary" onclick="goScreen('sc-order-view')" style="margin-top:4px;">Отправить заявку оператору</button>
+    <button class="btn-secondary">Сохранить черновик</button>
+  </div>
 </div>
 
-<!-- SUPERVISOR WEB DASHBOARD -->
-<div id="app-sv" style="display:none;width:100%;max-width:860px;">
+<!-- ══ SCREEN: ORDER VIEW + EXPORT ══ -->
+<div id="sc-order-view" style="display:none;" class="fade-in">
+  <div class="hdr"><div class="hdr-back" onclick="goScreen('sc-route')">‹</div><div class="hdr-text"><div class="ht">Заявка #FS-2025-0847</div><div class="hs">Береке Маркет · 26 марта 2025</div></div></div>
+  <div class="screen">
+    <div style="background:var(--gbg);border:1px solid var(--gbr);border-radius:var(--r);padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;gap:8px;">
+      <div style="width:28px;height:28px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7l3 3 5-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div><div style="font-size:13px;font-weight:700;color:var(--green);">Заявка принята оператором</div><div style="font-size:11px;color:#388e3c;margin-top:1px;">09:22 · Обработана · Готова к отгрузке</div></div>
+    </div>
+    <div class="card">
+      <div class="irow"><span class="ik">Клиент</span><span class="iv">Береке Маркет</span></div>
+      <div class="irow"><span class="ik">Номер заявки</span><span class="iv">FS-2025-0847</span></div>
+      <div class="irow"><span class="ik">Сумма</span><span class="iv blue">42 100 тг</span></div>
+      <div class="irow"><span class="ik">Начислено коинов</span><span class="iv" style="color:#F57F17;">+35 ₵</span></div>
+    </div>
+    <div class="card" style="margin-bottom:10px;">
+      <div class="order-item"><div class="oi-ico" style="background:#e3f2fd;">🥤</div><div class="oi-info"><div class="oi-name">Coca-Cola 0.5л</div><div class="oi-sub">арт. CC050</div></div><div class="oi-amt"><div class="oi-qty">×24</div><div class="oi-price">4 320 тг</div></div></div>
+      <div class="order-item"><div class="oi-ico" style="background:#e8f5e9;">🥤</div><div class="oi-info"><div class="oi-name">Sprite 0.5л</div><div class="oi-sub">арт. SP050</div></div><div class="oi-amt"><div class="oi-qty">×12</div><div class="oi-price">2 100 тг</div></div></div>
+      <div class="order-item"><div class="oi-ico" style="background:#fff3e0;">🍊</div><div class="oi-info"><div class="oi-name">Fanta 0.5л</div><div class="oi-sub">арт. FO050</div></div><div class="oi-amt"><div class="oi-qty">×8</div><div class="oi-price">1 424 тг</div></div></div>
+    </div>
+    <!-- EXPORT SECTION -->
+    <div class="sec">Экспорт для учётной системы</div>
+    <div class="export-panel">
+      <div class="ep-hdr"><span class="ep-title">Выберите формат</span><span style="font-size:11px;color:var(--t2);">Совместим с 1С 8.x</span></div>
+      <div class="ep-body">
+        <div class="fmt-grid">
+          <div class="fmt-card on" id="fmt-xml" onclick="selectFmt('xml')"><div class="fmt-ico">📄</div><div class="fmt-name">XML</div><div class="fmt-desc">1С 8 · Заказ покупателя</div></div>
+          <div class="fmt-card" id="fmt-csv" onclick="selectFmt('csv')"><div class="fmt-ico">📊</div><div class="fmt-name">CSV</div><div class="fmt-desc">Excel · Таблица</div></div>
+          <div class="fmt-card" id="fmt-json" onclick="selectFmt('json')"><div class="fmt-ico">⚙️</div><div class="fmt-name">JSON</div><div class="fmt-desc">API · REST</div></div>
+        </div>
+        <div id="preview-block"></div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn-sm btn-tg" style="flex:1;justify-content:center;" onclick="downloadFile()">⬇ Скачать файл</button>
+          <button class="btn-sm btn-outline" onclick="copyToClipboard()">📋 Копировать</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SCREEN: NEW OUTLET ══ -->
+<div id="sc-new-outlet" style="display:none;" class="fade-in">
+  <div class="hdr"><div class="hdr-back" onclick="goScreen('sc-route')">‹</div><div class="hdr-text"><div class="ht">Новая торговая точка</div><div class="hs">Шаг <span id="step-label">1 из 4</span></div></div></div>
+  <div class="screen" id="outlet-form-body">
+    <!-- Steps rendered by JS -->
+  </div>
+</div>
+
+<!-- ══ SCREEN: OUTLET SUCCESS ══ -->
+<div id="sc-outlet-success" style="display:none;" class="fade-in">
+  <div class="hdr"><div class="hdr-text"><div class="ht">Точка добавлена!</div><div class="hs">Данные сохранены в системе</div></div></div>
+  <div class="screen">
+    <div class="success-screen">
+      <div class="success-ico-wrap">
+        <svg width="36" height="36" viewBox="0 0 36 36" fill="none"><circle cx="18" cy="18" r="14" fill="#c8e6c9"/><path d="M11 18l5 5 9-9" stroke="#2e7d32" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div style="font-size:20px;font-weight:800;color:var(--t);margin-bottom:6px;">Магазин «Жулдыз» добавлен</div>
+      <div style="font-size:13px;color:var(--t2);line-height:1.6;margin-bottom:20px;">Точка создана и появится в маршруте со следующей недели. Руководитель получил уведомление.</div>
+      <div class="card" style="width:100%;text-align:left;margin-bottom:16px;">
+        <div class="irow"><span class="ik">ID точки</span><span class="iv blue">TT-2025-0314</span></div>
+        <div class="irow"><span class="ik">Категория</span><span class="iv">Магазин · Потенциальный</span></div>
+        <div class="irow"><span class="ik">Район</span><span class="iv">Жилой · Средний трафик</span></div>
+        <div class="irow"><span class="ik">Начислено</span><span class="iv" style="color:#F57F17;">+20 ₵ SalesCoins</span></div>
+      </div>
+      <button class="btn-primary" onclick="goScreen('sc-route')" style="width:100%;">Вернуться к маршруту</button>
+      <button class="btn-secondary" onclick="goScreen('sc-new-outlet')">Добавить ещё точку</button>
+    </div>
+  </div>
+</div>
+
+</div><!-- /phone -->
+</div><!-- /phone-wrap -->
+
+<!-- ─── WEB OPERATOR PANEL ─── -->
+<div id="main-web" style="display:none;" class="web-wrap">
 <div class="web-shell">
-  <div class="web-layout">
-    <div class="web-sidebar">
-      <div class="web-logo"><div class="web-logo-t">Field Sales OS</div><div class="web-logo-s">Панель руководителя</div></div>
-      <div class="web-nav">
-        <div class="web-nav-s">Главное</div>
-        <div class="web-nav-item on" onclick="wNav(this,'wd-dashboard')"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="7" width="5" height="6" rx="1" stroke="currentColor" stroke-width="1.2"/><rect x="4" y="4" width="5" height="9" rx="1" stroke="currentColor" stroke-width="1.2"/><rect x="8" y="2" width="5" height="11" rx="1" stroke="currentColor" stroke-width="1.2"/></svg> Дашборд</div>
-        <div class="web-nav-item" onclick="wNav(this,'wd-team')"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="5" cy="4" r="2.5" stroke="currentColor" stroke-width="1.2"/><circle cx="10" cy="5" r="2" stroke="currentColor" stroke-width="1.2"/><path d="M1 11c0-2 1.5-3 4-3s4 1 4 3" stroke="currentColor" stroke-width="1.2" fill="none"/><path d="M10 8c1.5.3 2.5 1.2 2.5 2.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg> Команда</div>
-        <div class="web-nav-item" onclick="wNav(this,'wd-orders')"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="2" y="2" width="10" height="10" rx="2" stroke="currentColor" stroke-width="1.2"/><path d="M4 6h6M4 4.5h6M4 7.5h4" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg> Заявки</div>
-        <div class="web-nav-s">Аналитика</div>
-        <div class="web-nav-item" onclick="wNav(this,'wd-coverage')"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="6" r="2" stroke="currentColor" stroke-width="1.2"/><path d="M7 10C4 10 2 8 2 6a5 5 0 0110 0c0 2-2 4-5 4z" stroke="currentColor" stroke-width="1.2" fill="none"/></svg> Покрытие</div>
-        <div class="web-nav-item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="3" width="12" height="8" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M4 9V6M6 9V5M8 9V7M10 9V4" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg> Отчёты</div>
-        <div class="web-nav-s">Настройки</div>
-        <div class="web-nav-item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="2.5" stroke="currentColor" stroke-width="1.2"/><path d="M7 1v2M7 11v2M1 7h2M11 7h2M2.5 2.5l1.5 1.5M10 10l1.5 1.5M2.5 11.5L4 10M10 4l1.5-1.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg> Настройки</div>
-      </div>
+  <div class="web-topbar">
+    <div class="web-title">Панель оператора · Заявки и каталог</div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <span style="font-size:12px;background:var(--gbg);color:var(--green);padding:5px 12px;border-radius:20px;font-weight:700;">Сегодня: 64 заявки</span>
+      <div style="width:30px;height:30px;border-radius:50%;background:var(--bbg);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:var(--blue);">ОП</div>
     </div>
-    <div class="web-main">
-      <!-- DASHBOARD -->
-      <div id="wd-dashboard">
-        <div class="web-topbar"><div style="font-size:15px;font-weight:600;color:var(--text);">Дашборд</div><div style="display:flex;align-items:center;gap:10px;"><span style="font-size:12px;background:var(--blue-bg);color:var(--blue);padding:4px 12px;border-radius:20px;font-weight:500;">Март 2025</span><div style="width:30px;height:30px;border-radius:50%;background:var(--blue-bg);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--blue);">АД</div></div></div>
-        <div class="web-content">
-          <div class="web-grid-4">
-            <div class="web-metric"><div class="web-metric-n">148</div><div class="web-metric-l">Визиты сегодня</div><div class="web-metric-d" style="color:var(--green);">+12% к плану</div></div>
-            <div class="web-metric"><div class="web-metric-n">87%</div><div class="web-metric-l">Покрытие точек</div><div class="web-metric-d" style="color:var(--red);">−5% к цели</div></div>
-            <div class="web-metric"><div class="web-metric-n">64</div><div class="web-metric-l">Заявок сегодня</div><div class="web-metric-d" style="color:var(--green);">+8 к вчера</div></div>
-            <div class="web-metric"><div class="web-metric-n">2.4M</div><div class="web-metric-l">Выручка (тг)</div><div class="web-metric-d" style="color:var(--green);">+18% к плану</div></div>
-          </div>
-          <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:12px;">
-            <div class="web-card">
-              <div class="web-card-title">Выполнение маршрутов</div>
-              <div class="web-prog-row"><div class="web-prog-label"><span>Алматинский р-н</span><span style="font-weight:600;">94%</span></div><div class="prog-bar"><div class="prog-fill" style="width:94%;background:var(--blue);"></div></div></div>
-              <div class="web-prog-row"><div class="web-prog-label"><span>Центральный р-н</span><span style="font-weight:600;">81%</span></div><div class="prog-bar"><div class="prog-fill" style="width:81%;background:#1D9E75;"></div></div></div>
-              <div class="web-prog-row"><div class="web-prog-label"><span>Северный р-н</span><span style="font-weight:600;">67%</span></div><div class="prog-bar"><div class="prog-fill" style="width:67%;background:#EF9F27;"></div></div></div>
-              <div class="web-prog-row"><div class="web-prog-label"><span>Южный р-н</span><span style="font-weight:600;">55%</span></div><div class="prog-bar"><div class="prog-fill" style="width:55%;background:#E24B4A;"></div></div></div>
-            </div>
-            <div class="web-card">
-              <div class="web-card-title">Активность ТП</div>
-              <div class="rep-bar"><div class="rep-av" style="background:var(--blue-bg);color:var(--blue);">АС</div><div class="rep-info"><div class="rep-name">Асель С.</div><div class="prog-bar"><div class="prog-fill" style="width:94%;background:var(--blue);"></div></div></div><div class="rep-pct">94%</div></div>
-              <div class="rep-bar"><div class="rep-av" style="background:var(--green-bg);color:var(--green);">БД</div><div class="rep-info"><div class="rep-name">Бекзат Д.</div><div class="prog-bar"><div class="prog-fill" style="width:81%;background:var(--green);"></div></div></div><div class="rep-pct">81%</div></div>
-              <div class="rep-bar"><div class="rep-av" style="background:var(--amber-bg);color:var(--amber);">НА</div><div class="rep-info"><div class="rep-name">Назгуль А.</div><div class="prog-bar"><div class="prog-fill" style="width:57%;background:#EF9F27;"></div></div></div><div class="rep-pct">57%</div></div>
-              <div class="rep-bar"><div class="rep-av" style="background:var(--red-bg);color:var(--red);">ДК</div><div class="rep-info"><div class="rep-name">Данияр К.</div><div class="prog-bar"><div class="prog-fill" style="width:42%;background:#E24B4A;"></div></div></div><div class="rep-pct">42%</div></div>
-            </div>
-          </div>
-        </div>
+  </div>
+  <div class="web-content">
+    <div class="web-grid-3">
+      <div class="web-stat"><div class="web-stat-n" style="color:var(--amber);">12</div><div class="web-stat-l">Ожидают обработки</div></div>
+      <div class="web-stat"><div class="web-stat-n" style="color:var(--green);">52</div><div class="web-stat-l">Приняты сегодня</div></div>
+      <div class="web-stat"><div class="web-stat-n" style="color:var(--blue);">2.4M тг</div><div class="web-stat-l">Выручка за день</div></div>
+    </div>
+    <!-- ORDERS TABLE -->
+    <div style="font-size:13px;font-weight:700;color:var(--t);margin-bottom:10px;">Входящие заявки · Экспорт в 1С</div>
+    <div style="background:var(--card);border-radius:var(--r);border:1px solid var(--b);overflow:hidden;margin-bottom:16px;">
+      <table style="width:100%;border-collapse:collapse;font-size:12px;">
+        <thead><tr style="background:var(--bg);">
+          <th style="padding:9px 14px;text-align:left;font-size:11px;color:var(--t2);font-weight:700;border-bottom:1px solid var(--b);">Заявка</th>
+          <th style="padding:9px 14px;text-align:left;font-size:11px;color:var(--t2);font-weight:700;border-bottom:1px solid var(--b);">Клиент</th>
+          <th style="padding:9px 14px;text-align:left;font-size:11px;color:var(--t2);font-weight:700;border-bottom:1px solid var(--b);">ТП</th>
+          <th style="padding:9px 14px;text-align:left;font-size:11px;color:var(--t2);font-weight:700;border-bottom:1px solid var(--b);">Сумма</th>
+          <th style="padding:9px 14px;text-align:left;font-size:11px;color:var(--t2);font-weight:700;border-bottom:1px solid var(--b);">Статус</th>
+          <th style="padding:9px 14px;text-align:left;font-size:11px;color:var(--t2);font-weight:700;border-bottom:1px solid var(--b);">Экспорт</th>
+        </tr></thead>
+        <tbody id="orders-table-body"></tbody>
+      </table>
+    </div>
+    <!-- BULK EXPORT -->
+    <div style="background:var(--bbg);border:1px solid var(--bbr);border-radius:var(--r);padding:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+      <div>
+        <div style="font-size:13px;font-weight:700;color:var(--blue);">Пакетный экспорт в 1С</div>
+        <div style="font-size:12px;color:#1565c0;margin-top:2px;">Выгрузить все принятые заявки за сегодня одним файлом</div>
       </div>
-      <!-- TEAM -->
-      <div id="wd-team" style="display:none;">
-        <div class="web-topbar"><div style="font-size:15px;font-weight:600;color:var(--text);">Команда</div><div style="background:var(--tg);color:#fff;font-size:12px;padding:6px 14px;border-radius:8px;cursor:pointer;font-weight:600;">+ Добавить ТП</div></div>
-        <div class="web-content">
-          <div style="background:var(--card);border-radius:12px;border:1px solid var(--border);overflow:hidden;">
-            <table style="width:100%;border-collapse:collapse;font-size:12px;">
-              <thead><tr style="background:var(--bg);"><th style="padding:9px 14px;text-align:left;font-size:11px;color:var(--text2);font-weight:600;border-bottom:1px solid var(--border);">Сотрудник</th><th style="padding:9px 14px;text-align:left;font-size:11px;color:var(--text2);font-weight:600;border-bottom:1px solid var(--border);">Визиты сегодня</th><th style="padding:9px 14px;text-align:left;font-size:11px;color:var(--text2);font-weight:600;border-bottom:1px solid var(--border);">Выручка</th><th style="padding:9px 14px;text-align:left;font-size:11px;color:var(--text2);font-weight:600;border-bottom:1px solid var(--border);">Покрытие</th><th style="padding:9px 14px;text-align:left;font-size:11px;color:var(--text2);font-weight:600;border-bottom:1px solid var(--border);">Статус</th></tr></thead>
-              <tbody>
-                <tr style="border-bottom:1px solid var(--border);"><td style="padding:10px 14px;"><div style="display:flex;align-items:center;gap:8px;"><div style="width:28px;height:28px;border-radius:50%;background:var(--blue-bg);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--blue);">АС</div><div><div style="font-weight:600;color:var(--text);">Асель Сейткали</div><div style="font-size:10px;color:var(--text2);">Алматинский р-н</div></div></div></td><td style="padding:10px 14px;">32 / 34</td><td style="padding:10px 14px;font-weight:600;">1 240 000 тг</td><td style="padding:10px 14px;"><span style="color:var(--green);font-weight:600;">94%</span></td><td style="padding:10px 14px;"><span class="pill pill-green">Активна</span></td></tr>
-                <tr style="border-bottom:1px solid var(--border);"><td style="padding:10px 14px;"><div style="display:flex;align-items:center;gap:8px;"><div style="width:28px;height:28px;border-radius:50%;background:var(--green-bg);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--green);">БД</div><div><div style="font-weight:600;color:var(--text);">Бекзат Дуйсенов</div><div style="font-size:10px;color:var(--text2);">Центральный р-н</div></div></div></td><td style="padding:10px 14px;">28 / 34</td><td style="padding:10px 14px;font-weight:600;">980 000 тг</td><td style="padding:10px 14px;"><span style="color:var(--green);font-weight:600;">81%</span></td><td style="padding:10px 14px;"><span class="pill pill-green">Активен</span></td></tr>
-                <tr style="border-bottom:1px solid var(--border);"><td style="padding:10px 14px;"><div style="display:flex;align-items:center;gap:8px;"><div style="width:28px;height:28px;border-radius:50%;background:var(--amber-bg);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--amber);">НА</div><div><div style="font-weight:600;color:var(--text);">Назгуль Ахметова</div><div style="font-size:10px;color:var(--text2);">Северный р-н</div></div></div></td><td style="padding:10px 14px;">19 / 34</td><td style="padding:10px 14px;font-weight:600;">620 000 тг</td><td style="padding:10px 14px;"><span style="color:var(--amber);font-weight:600;">57%</span></td><td style="padding:10px 14px;"><span class="pill pill-amber">Риск</span></td></tr>
-                <tr><td style="padding:10px 14px;"><div style="display:flex;align-items:center;gap:8px;"><div style="width:28px;height:28px;border-radius:50%;background:var(--red-bg);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--red);">ДК</div><div><div style="font-weight:600;color:var(--text);">Данияр Касымов</div><div style="font-size:10px;color:var(--text2);">Южный р-н</div></div></div></td><td style="padding:10px 14px;">11 / 34</td><td style="padding:10px 14px;font-weight:600;">310 000 тг</td><td style="padding:10px 14px;"><span style="color:var(--red);font-weight:600;">42%</span></td><td style="padding:10px 14px;"><span class="pill pill-red">Отстаёт</span></td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-      <!-- ORDERS -->
-      <div id="wd-orders" style="display:none;">
-        <div class="web-topbar"><div style="font-size:15px;font-weight:600;color:var(--text);">Заявки</div><div style="display:flex;gap:8px;"><span style="font-size:12px;background:var(--green-bg);color:var(--green);padding:4px 12px;border-radius:20px;font-weight:600;">Сегодня: 64</span><span style="font-size:12px;background:var(--amber-bg);color:var(--amber);padding:4px 12px;border-radius:20px;font-weight:600;">Ожидают: 12</span></div></div>
-        <div class="web-content">
-          <div style="background:var(--card);border-radius:12px;border:1px solid var(--border);overflow:hidden;">
-            <table style="width:100%;border-collapse:collapse;font-size:12px;">
-              <thead><tr style="background:var(--bg);"><th style="padding:9px 14px;text-align:left;font-size:11px;color:var(--text2);font-weight:600;border-bottom:1px solid var(--border);">Клиент</th><th style="padding:9px 14px;text-align:left;font-size:11px;color:var(--text2);font-weight:600;border-bottom:1px solid var(--border);">ТП</th><th style="padding:9px 14px;text-align:left;font-size:11px;color:var(--text2);font-weight:600;border-bottom:1px solid var(--border);">Время</th><th style="padding:9px 14px;text-align:left;font-size:11px;color:var(--text2);font-weight:600;border-bottom:1px solid var(--border);">Сумма</th><th style="padding:9px 14px;text-align:left;font-size:11px;color:var(--text2);font-weight:600;border-bottom:1px solid var(--border);">Статус</th></tr></thead>
-              <tbody>
-                <tr style="border-bottom:1px solid var(--border);"><td style="padding:9px 14px;font-weight:600;">Магазин «Арман»</td><td style="padding:9px 14px;color:var(--text2);">Асель С.</td><td style="padding:9px 14px;color:var(--text2);">10:31</td><td style="padding:9px 14px;font-weight:600;color:var(--tg);">5 846 тг</td><td style="padding:9px 14px;"><span class="pill pill-amber">Ожидает</span></td></tr>
-                <tr style="border-bottom:1px solid var(--border);"><td style="padding:9px 14px;font-weight:600;">Береке Маркет</td><td style="padding:9px 14px;color:var(--text2);">Асель С.</td><td style="padding:9px 14px;color:var(--text2);">09:15</td><td style="padding:9px 14px;font-weight:600;color:var(--tg);">42 100 тг</td><td style="padding:9px 14px;"><span class="pill pill-green">Принята</span></td></tr>
-                <tr style="border-bottom:1px solid var(--border);"><td style="padding:9px 14px;font-weight:600;">Мегамарт</td><td style="padding:9px 14px;color:var(--text2);">Бекзат Д.</td><td style="padding:9px 14px;color:var(--text2);">08:55</td><td style="padding:9px 14px;font-weight:600;color:var(--tg);">118 400 тг</td><td style="padding:9px 14px;"><span class="pill pill-green">Принята</span></td></tr>
-                <tr><td style="padding:9px 14px;font-weight:600;">Жулдыз Маркет</td><td style="padding:9px 14px;color:var(--text2);">Назгуль А.</td><td style="padding:9px 14px;color:var(--text2);">07:42</td><td style="padding:9px 14px;font-weight:600;color:var(--tg);">21 600 тг</td><td style="padding:9px 14px;"><span class="pill pill-blue">Отгружена</span></td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-      <!-- COVERAGE -->
-      <div id="wd-coverage" style="display:none;">
-        <div class="web-topbar"><div style="font-size:15px;font-weight:600;color:var(--text);">Покрытие точек</div><span style="font-size:12px;background:var(--blue-bg);color:var(--blue);padding:4px 12px;border-radius:20px;font-weight:600;">87% — 148/170 точек</span></div>
-        <div class="web-content">
-          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;">
-            <div class="web-metric"><div class="web-metric-n" style="color:var(--green);">118</div><div class="web-metric-l">Посещено сегодня</div></div>
-            <div class="web-metric"><div class="web-metric-n" style="color:var(--red);">22</div><div class="web-metric-l">Пропущено</div></div>
-            <div class="web-metric"><div class="web-metric-n" style="color:var(--amber);">30</div><div class="web-metric-l">Запланировано</div></div>
-          </div>
-          <div class="web-card">
-            <div class="web-card-title">Покрытие по районам</div>
-            <div class="web-prog-row"><div class="web-prog-label"><span>Алматинский р-н</span><span style="font-weight:600;color:var(--green);">94%</span></div><div class="prog-bar" style="height:8px;"><div class="prog-fill" style="width:94%;background:var(--blue);height:100%;"></div></div></div>
-            <div style="height:8px;"></div>
-            <div class="web-prog-row"><div class="web-prog-label"><span>Центральный р-н</span><span style="font-weight:600;color:var(--green);">81%</span></div><div class="prog-bar" style="height:8px;"><div class="prog-fill" style="width:81%;background:#1D9E75;height:100%;"></div></div></div>
-            <div style="height:8px;"></div>
-            <div class="web-prog-row"><div class="web-prog-label"><span>Северный р-н</span><span style="font-weight:600;color:var(--amber);">67%</span></div><div class="prog-bar" style="height:8px;"><div class="prog-fill" style="width:67%;background:#EF9F27;height:100%;"></div></div></div>
-            <div style="height:8px;"></div>
-            <div class="web-prog-row"><div class="web-prog-label"><span>Южный р-н</span><span style="font-weight:600;color:var(--red);">55%</span></div><div class="prog-bar" style="height:8px;"><div class="prog-fill" style="width:55%;background:#E24B4A;height:100%;"></div></div></div>
-            <div style="height:8px;"></div>
-            <div class="web-prog-row"><div class="web-prog-label"><span>Восточный р-н</span><span style="font-weight:600;color:var(--green);">88%</span></div><div class="prog-bar" style="height:8px;"><div class="prog-fill" style="width:88%;background:var(--blue);height:100%;"></div></div></div>
-          </div>
-        </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn-sm" style="background:var(--blue);color:#fff;" onclick="bulkExport('xml')">📄 XML для 1С</button>
+        <button class="btn-sm btn-outline" onclick="bulkExport('csv')">📊 CSV / Excel</button>
       </div>
     </div>
   </div>
 </div>
 </div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
 
 <script>
-var prices=[180,175,178,290], qtys=[12,6,4,0];
+// ── STATE ──
+var prices=[180,175,178,290], qtys=[0,0,0,0];
+var names=['Coca-Cola 0.5л','Sprite 0.5л','Fanta Orange 0.5л',"Lay's Сметана 100г"];
+var arts=['CC050','SP050','FO050','LY100'];
+var curFmt='xml', outletStep=1;
+
+// ── NAVIGATION ──
+var allScreens=['sc-route','sc-outlet','sc-order','sc-order-confirm','sc-order-view','sc-new-outlet','sc-outlet-success'];
+function goScreen(id){
+  allScreens.forEach(function(s){
+    var el=document.getElementById(s);
+    if(el){el.style.display='none';}
+  });
+  var t=document.getElementById(id);
+  if(t){
+    t.style.display='';
+    t.classList.remove('fade-in');
+    void t.offsetWidth;
+    t.classList.add('fade-in');
+  }
+  if(id==='sc-order-confirm') updateConfirm();
+  if(id==='sc-new-outlet') renderStep();
+  if(id==='sc-order-view') renderPreview();
+}
+
+function switchMain(m){
+  document.getElementById('main-mobile').style.display=m==='mobile'?'':'none';
+  document.getElementById('main-web').style.display=m==='web'?'':'none';
+  document.querySelectorAll('.ntab').forEach(function(b,i){b.classList.toggle('on',(i===0&&m==='mobile')||(i===1&&m==='web'));});
+  if(m==='web') renderWebOrders();
+}
+
+// ── ORDER ──
 function chg(i,d){
   qtys[i]=Math.max(0,qtys[i]+d);
   document.getElementById('q'+i).textContent=qtys[i];
+  updateCart();
+}
+function updateCart(){
   var t=0,c=0;
-  qtys.forEach(function(q,j){t+=q*prices[j];c+=q;});
+  qtys.forEach(function(q,i){t+=q*prices[i];c+=q;});
+  document.getElementById('cnt').textContent=c;
   document.getElementById('ctotal').textContent=t.toLocaleString('ru-RU')+' тг';
-  document.getElementById('cnt').textContent=c+' шт';
-  document.getElementById('final-sum').textContent=t.toLocaleString('ru-RU')+' тг';
+}
+function repeatOrder(){qtys=[12,6,4,0];[0,1,2,3].forEach(function(i){document.getElementById('q'+i).textContent=qtys[i];});updateCart();showToast('Прошлый заказ восстановлен ✓');}
+
+function updateConfirm(){
+  var t=0,c=0,html='';
+  qtys.forEach(function(q,i){if(q>0){t+=q*prices[i];c+=q;html+='<div class="order-item"><div class="oi-ico" style="background:#e3f2fd;font-size:16px;">🥤</div><div class="oi-info"><div class="oi-name">'+names[i]+'</div><div class="oi-sub">арт. '+arts[i]+'</div></div><div class="oi-amt"><div class="oi-qty">×'+q+'</div><div class="oi-price">'+(q*prices[i]).toLocaleString('ru-RU')+' тг</div></div></div>';}});
+  if(!html) html='<div style="padding:14px;text-align:center;color:var(--t2);font-size:12px;">Нет позиций — вернитесь и добавьте товары</div>';
+  document.getElementById('confirm-items').innerHTML=html;
+  document.getElementById('conf-cnt').textContent=c+' шт';
+  document.getElementById('conf-total').textContent=t.toLocaleString('ru-RU')+' тг';
 }
 
-var screens=['s-home','s-client','s-checkin','s-order','s-balance','s-success'];
-function goTo(id){
-  screens.forEach(function(s){
-    var el=document.getElementById(s);
-    if(el) el.style.display='none';
+// ── EXPORT FORMATS ──
+function selectFmt(f){
+  curFmt=f;
+  ['xml','csv','json'].forEach(function(x){document.getElementById('fmt-'+x).classList.toggle('on',x===f);});
+  renderPreview();
+}
+
+function getOrderData(){
+  var items=[];
+  qtys.forEach(function(q,i){if(q>0)items.push({art:arts[i],name:names[i],qty:q,price:prices[i],sum:q*prices[i]});});
+  if(!items.length) items=[{art:'CC050',name:'Coca-Cola 0.5л',qty:24,price:180,sum:4320},{art:'SP050',name:'Sprite 0.5л',qty:12,price:175,sum:2100},{art:'FO050',name:'Fanta Orange 0.5л',qty:8,price:178,sum:1424}];
+  var total=items.reduce(function(s,x){return s+x.sum;},0);
+  return{items:items,total:total};
+}
+
+function renderPreview(){
+  var d=getOrderData();
+  var block=document.getElementById('preview-block');
+  if(!block) return;
+  if(curFmt==='xml'){
+    var rows=d.items.map(function(x){
+      return '  <span class="xml-tag">&lt;Товар&gt;</span>\n'+
+        '    <span class="xml-tag">&lt;Артикул&gt;</span><span class="xml-val">'+x.art+'</span><span class="xml-tag">&lt;/Артикул&gt;</span>\n'+
+        '    <span class="xml-tag">&lt;Наименование&gt;</span><span class="xml-val">'+x.name+'</span><span class="xml-tag">&lt;/Наименование&gt;</span>\n'+
+        '    <span class="xml-tag">&lt;Количество&gt;</span><span class="xml-val">'+x.qty+'</span><span class="xml-tag">&lt;/Количество&gt;</span>\n'+
+        '    <span class="xml-tag">&lt;Цена&gt;</span><span class="xml-val">'+x.price+'</span><span class="xml-tag">&lt;/Цена&gt;</span>\n'+
+        '    <span class="xml-tag">&lt;Сумма&gt;</span><span class="xml-val">'+x.sum+'</span><span class="xml-tag">&lt;/Сумма&gt;</span>\n'+
+        '  <span class="xml-tag">&lt;/Товар&gt;</span>';
+    }).join('\n');
+    block.innerHTML='<div class="code-preview">'+
+      '<span class="xml-comment">&lt;?xml version="1.0" encoding="UTF-8"?&gt;</span>\n'+
+      '<span class="xml-tag">&lt;ЗаказПокупателя</span> <span class="xml-attr">xmlns</span>=<span class="xml-val">"http://v8.1c.ru/8.1/data/core"</span><span class="xml-tag">&gt;</span>\n'+
+      '  <span class="xml-tag">&lt;Номер&gt;</span><span class="xml-val">FS-2025-0847</span><span class="xml-tag">&lt;/Номер&gt;</span>\n'+
+      '  <span class="xml-tag">&lt;Дата&gt;</span><span class="xml-val">2025-03-26</span><span class="xml-tag">&lt;/Дата&gt;</span>\n'+
+      '  <span class="xml-tag">&lt;Контрагент&gt;</span><span class="xml-val">Береке Маркет</span><span class="xml-tag">&lt;/Контрагент&gt;</span>\n'+
+      '  <span class="xml-tag">&lt;ТипЦен&gt;</span><span class="xml-val">Оптовая Б</span><span class="xml-tag">&lt;/ТипЦен&gt;</span>\n'+
+      '  <span class="xml-tag">&lt;СуммаДокумента&gt;</span><span class="xml-val">'+d.total+'</span><span class="xml-tag">&lt;/СуммаДокумента&gt;</span>\n'+
+      '  <span class="xml-tag">&lt;Товары&gt;</span>\n'+rows+'\n  <span class="xml-tag">&lt;/Товары&gt;</span>\n'+
+      '<span class="xml-tag">&lt;/ЗаказПокупателя&gt;</span></div>';
+  } else if(curFmt==='csv'){
+    var rows=d.items.map(function(x){return x.art+';'+x.name+';'+x.qty+';'+x.price+';'+x.sum+';тг';}).join('\n');
+    block.innerHTML='<div class="csv-preview">Артикул;Наименование;Количество;Цена;Сумма;Валюта\n'+rows+'\n;;ИТОГО;;'+d.total+';тг</div>';
+  } else {
+    var jitems=d.items.map(function(x){return'  {"art":"'+x.art+'","name":"'+x.name+'","qty":'+x.qty+',"price":'+x.price+',"sum":'+x.sum+'}';}).join(',\n');
+    block.innerHTML='<div class="code-preview" style="color:#a6e3a1;">{\n  "order_id": "FS-2025-0847",\n  "date": "2025-03-26",\n  "client": "Береке Маркет",\n  "price_type": "Оптовая Б",\n  "total": '+d.total+',\n  "items": [\n'+jitems+'\n  ]\n}</div>';
+  }
+}
+
+function buildFileContent(){
+  var d=getOrderData();
+  if(curFmt==='xml'){
+    var rows=d.items.map(function(x){return'  <Товар>\n    <Артикул>'+x.art+'</Артикул>\n    <Наименование>'+x.name+'</Наименование>\n    <Количество>'+x.qty+'</Количество>\n    <Цена>'+x.price+'</Цена>\n    <Сумма>'+x.sum+'</Сумма>\n  </Товар>';}).join('\n');
+    return'<?xml version="1.0" encoding="UTF-8"?>\n<ЗаказПокупателя xmlns="http://v8.1c.ru/8.1/data/core">\n  <Номер>FS-2025-0847</Номер>\n  <Дата>2025-03-26</Дата>\n  <Контрагент>Береке Маркет</Контрагент>\n  <ТипЦен>Оптовая Б</ТипЦен>\n  <СуммаДокумента>'+d.total+'</СуммаДокумента>\n  <Товары>\n'+rows+'\n  </Товары>\n</ЗаказПокупателя>';
+  } else if(curFmt==='csv'){
+    var rows=d.items.map(function(x){return x.art+';'+x.name+';'+x.qty+';'+x.price+';'+x.sum+';тг';}).join('\n');
+    return 'Артикул;Наименование;Количество;Цена;Сумма;Валюта\n'+rows+'\n;;ИТОГО;;'+d.total+';тг';
+  } else {
+    var jitems=d.items.map(function(x){return'{"art":"'+x.art+'","name":"'+x.name+'","qty":'+x.qty+',"price":'+x.price+',"sum":'+x.sum+'}';}).join(',');
+    return'{"order_id":"FS-2025-0847","date":"2025-03-26","client":"Береке Маркет","price_type":"Оптовая Б","total":'+d.total+',"items":['+jitems+']}';
+  }
+}
+
+function downloadFile(){
+  var ext={xml:'xml',csv:'csv',json:'json'}[curFmt];
+  var mime={xml:'application/xml',csv:'text/csv',json:'application/json'}[curFmt];
+  var content=buildFileContent();
+  var blob=new Blob([content],{type:mime+';charset=utf-8'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url; a.download='order_FS-2025-0847.'+ext; a.click();
+  URL.revokeObjectURL(url);
+  showToast('Файл скачан: order_FS-2025-0847.'+ext+' ✓');
+}
+
+function copyToClipboard(){
+  var content=buildFileContent();
+  navigator.clipboard.writeText(content).then(function(){showToast('Скопировано в буфер обмена ✓');}).catch(function(){showToast('Скопируйте из превью вручную');});
+}
+
+// ── NEW OUTLET FORM ──
+var outletData={name:'',type:'',addr:'',phone:'',mgmt:'',buyers:'',district:'',traffic:'',network:'',weekdays:'',buydates:''};
+
+var stepConfigs=[
+  {title:'Основные данные',fields:function(){return'<div class="field-group"><label>Название точки</label><input id="of-name" placeholder="Магазин «Жулдыз»" value="'+outletData.name+'" oninput="outletData.name=this.value"><div class="hint">Как называет хозяин или вывеска</div></div><div class="field-group"><label>Тип торговой точки</label><div class="chips" id="chips-type"></div></div><div class="field-group"><label>Адрес</label><input id="of-addr" placeholder="ул. Байзакова, 14" value="'+outletData.addr+'" oninput="outletData.addr=this.value"></div><div class="map-ph"><div class="map-road-h" style="top:45%"></div><div class="map-road-v" style="left:40%"></div><div class="map-pin-outer"></div><div class="map-pin-inner"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="3" fill="#fff"/></svg></div><div class="map-locate-btn" onclick="showToast(\'GPS захвачен ✓\')">📍 Моя позиция</div></div><div class="field-group"><label>Телефон контакта</label><input id="of-phone" placeholder="+7 777 000 00 00" value="'+outletData.phone+'" oninput="outletData.phone=this.value"></div>';}},
+  {title:'Кто и для кого',fields:function(){return'<div class="field-group"><label>Тип управления</label><div class="chips" id="chips-mgmt"></div></div><div class="field-group"><label>Целевые покупатели</label><div class="chips" id="chips-buyers"></div></div><div class="field-group"><label>Режим работы</label><div class="field-row"><input placeholder="Открытие: 08:00" style="border-radius:10px;border:1.5px solid var(--b);padding:10px 12px;font-size:13px;font-family:var(--f);outline:none;width:100%;" onfocus="this.style.borderColor=\'var(--tg)\'" onblur="this.style.borderColor=\'var(--b)\'"><input placeholder="Закрытие: 22:00" style="border-radius:10px;border:1.5px solid var(--b);padding:10px 12px;font-size:13px;font-family:var(--f);outline:none;width:100%;" onfocus="this.style.borderColor=\'var(--tg)\'" onblur="this.style.borderColor=\'var(--b)\'"></div></div><div class="field-group"><label>Примерный чек покупателя (тг)</label><div class="chips" id="chips-check"></div></div>';}},
+  {title:'Место и контекст',fields:function(){return'<div class="field-group"><label>Тип района</label><div class="chips" id="chips-district"></div></div><div class="field-group"><label>Пешеходный трафик</label><div class="chips" id="chips-traffic"></div></div><div class="field-group"><label>Тип сети</label><div class="chips" id="chips-network"></div></div><div class="field-group"><label>Конкуренты рядом</label><input placeholder="2 магазина в радиусе 200м" style="border-radius:10px;border:1.5px solid var(--b);padding:10px 12px;font-size:13px;font-family:var(--f);outline:none;width:100%;" onfocus="this.style.borderColor=\'var(--tg)\'" onblur="this.style.borderColor=\'var(--b)\'"></div>';}},
+  {title:'Финансы и даты',fields:function(){return'<div class="field-group"><label>Предпочитаемые дни для визита</label><div class="chips" id="chips-weekdays"></div></div><div class="field-group"><label>Крупные закупки — когда?</label><div class="chips" id="chips-buydates"></div></div><div class="field-group"><label>Форма оплаты</label><div class="chips" id="chips-payment"></div></div><div class="field-group"><label>Особые заметки о клиенте</label><textarea rows="3" placeholder="Хозяин любит, когда приходят утром. Есть запасной вход со двора..." style="border-radius:10px;border:1.5px solid var(--b);padding:10px 12px;font-size:13px;font-family:var(--f);outline:none;width:100%;resize:none;" onfocus="this.style.borderColor=\'var(--tg)\'" onblur="this.style.borderColor=\'var(--b)\'"></textarea></div>';}}
+];
+
+var chipsData={
+  'chips-type':['Магазин','Супермаркет','Мини-маркет','Киоск','Аптека','HoReCa'],
+  'chips-mgmt':['Хозяин-продавец','Наёмный директор','Сетевой (централ.)','Франшиза'],
+  'chips-buyers':['Жители квартала','Офисные работники','Студенты','Транзитные'],
+  'chips-check':['до 500 тг','500–1500 тг','1500–3000 тг','от 3000 тг'],
+  'chips-district':['Жилой массив','Деловой центр','Рынок / Базар','Трасса / Дорога','Промзона'],
+  'chips-traffic':['Низкий','Средний','Высокий','Очень высокий'],
+  'chips-network':['Независимый','Малая сеть (2–5)','Крупная сеть','Централизованный'],
+  'chips-weekdays':['Пн','Вт','Ср','Чт','Пт','Сб'],
+  'chips-buydates':['Начало недели','Середина недели','Конец недели','Начало месяца','Конец месяца'],
+  'chips-payment':['Наличные','Безнал','Отсрочка 7 дн','Отсрочка 14 дн','Отсрочка 30 дн']
+};
+
+function renderStep(){
+  var cfg=stepConfigs[outletStep-1];
+  document.getElementById('step-label').textContent=outletStep+' из 4';
+  var html='<div class="steps">';
+  for(var i=1;i<=4;i++){
+    var cls=i<outletStep?'done':i===outletStep?'active':'';
+    html+='<div class="step '+cls+'"><div class="step-dot">'+(i<outletStep?'✓':i)+'</div><div class="step-lbl">'+['Данные','Кто/Кому','Место','Финансы'][i-1]+'</div></div>';
+  }
+  html+='</div>';
+  html+=cfg.fields();
+  html+='<div style="display:flex;gap:8px;margin-top:14px;">';
+  if(outletStep>1) html+='<button class="btn-sm btn-outline" style="flex:1;justify-content:center;padding:12px;" onclick="stepBack()">← Назад</button>';
+  if(outletStep<4) html+='<button class="btn-sm btn-tg" style="flex:2;justify-content:center;padding:12px;font-size:14px;" onclick="stepNext()">Далее →</button>';
+  else html+='<button class="btn-sm" style="flex:2;justify-content:center;padding:12px;font-size:14px;font-weight:700;background:var(--green);color:#fff;" onclick="submitOutlet()">✓ Сохранить точку</button>';
+  html+='</div>';
+  document.getElementById('outlet-form-body').innerHTML=html;
+  // render chips
+  Object.keys(chipsData).forEach(function(id){
+    var el=document.getElementById(id);
+    if(!el) return;
+    el.innerHTML=chipsData[id].map(function(opt){return'<div class="chip-opt" onclick="toggleChip(this,\''+id+'\')">'+opt+'</div>';}).join('');
   });
-  var target=document.getElementById(id);
-  if(target){target.style.display='';target.classList.remove('screen-fade');void target.offsetWidth;target.classList.add('screen-fade');}
-  document.getElementById('bnav-tp').style.display='flex';
-  if(id==='s-order'||id==='s-checkin'||id==='s-client'||id==='s-success') document.getElementById('bnav-tp').style.display='none';
-  if(id==='s-home') setNavActive('nav-home');
-  if(id==='s-balance') setNavActive('nav-balance');
+}
+function toggleChip(el,id){
+  if(['chips-type','chips-mgmt','chips-district','chips-traffic','chips-network','chips-payment'].includes(id)){
+    el.parentElement.querySelectorAll('.chip-opt').forEach(function(c){c.classList.remove('on');});
+  }
+  el.classList.toggle('on');
+}
+function stepNext(){outletStep=Math.min(4,outletStep+1);renderStep();}
+function stepBack(){outletStep=Math.max(1,outletStep-1);renderStep();}
+function submitOutlet(){outletStep=1;goScreen('sc-outlet-success');}
+
+// ── WEB ORDERS TABLE ──
+var webOrders=[
+  {id:'FS-2025-0847',client:'Береке Маркет',tp:'Асель С.',sum:'42 100 тг',status:'accepted'},
+  {id:'FS-2025-0848',client:'Магазин «Арман»',tp:'Асель С.',sum:'5 846 тг',status:'pending'},
+  {id:'FS-2025-0845',client:'Мегамарт',tp:'Бекзат Д.',sum:'118 400 тг',status:'shipped'},
+  {id:'FS-2025-0844',client:'Жулдыз Маркет',tp:'Назгуль А.',sum:'21 600 тг',status:'accepted'},
+  {id:'FS-2025-0843',client:'Алма Супер',tp:'Данияр К.',sum:'8 900 тг',status:'pending'},
+];
+function renderWebOrders(){
+  var statusMap={pending:{label:'Ожидает',cls:'pa'},accepted:{label:'Принята',cls:'pg'},shipped:{label:'Отгружена',cls:'pb'}};
+  var html=webOrders.map(function(o){
+    var s=statusMap[o.status];
+    return'<tr style="border-bottom:1px solid var(--b);">'+
+      '<td style="padding:9px 14px;font-weight:700;color:var(--blue);">'+o.id+'</td>'+
+      '<td style="padding:9px 14px;font-weight:600;color:var(--t);">'+o.client+'</td>'+
+      '<td style="padding:9px 14px;color:var(--t2);">'+o.tp+'</td>'+
+      '<td style="padding:9px 14px;font-weight:700;color:var(--t);">'+o.sum+'</td>'+
+      '<td style="padding:9px 14px;"><span class="pill '+s.cls+'">'+s.label+'</span></td>'+
+      '<td style="padding:9px 14px;"><div style="display:flex;gap:5px;">'+
+        '<button class="btn-sm" style="background:#1565c0;color:#fff;font-size:11px;padding:5px 10px;" onclick="exportSingle(\''+o.id+'\',\'xml\')">XML</button>'+
+        '<button class="btn-sm btn-outline" style="font-size:11px;padding:5px 10px;" onclick="exportSingle(\''+o.id+'\',\'csv\')">CSV</button>'+
+      '</div></td></tr>';
+  }).join('');
+  var tbody=document.getElementById('orders-table-body');
+  if(tbody) tbody.innerHTML=html;
 }
 
-function navTo(n){
-  if(n==='home') goTo('s-home');
-  if(n==='balance') goTo('s-balance');
-  if(n==='clients') goTo('s-client');
-  if(n==='orders') goTo('s-checkin');
-  setNavActive('nav-'+n);
+function exportSingle(id,fmt){
+  var ext=fmt;
+  var content=fmt==='xml'?
+    '<?xml version="1.0" encoding="UTF-8"?>\n<ЗаказПокупателя>\n  <Номер>'+id+'</Номер>\n  <Дата>2025-03-26</Дата>\n</ЗаказПокупателя>':
+    'Номер;Дата;Контрагент\n'+id+';2025-03-26;Клиент';
+  var blob=new Blob([content],{type:'text/plain;charset=utf-8'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url; a.download='order_'+id+'.'+ext; a.click();
+  URL.revokeObjectURL(url);
+  showToast('Экспортирован '+id+'.'+ext+' ✓');
 }
 
-function setNavActive(id){
-  ['nav-home','nav-clients','nav-orders','nav-balance'].forEach(function(n){
-    var el=document.getElementById(n);
-    if(el){el.classList.remove('active');el.querySelectorAll('svg path,svg rect,svg circle').forEach(function(p){p.setAttribute('stroke','#aaa');});el.querySelector('.bnav-lbl').style.color='#aaa';}
-  });
-  var el=document.getElementById(id);
-  if(el){el.classList.add('active');el.querySelector('.bnav-lbl').style.color='var(--tg)';}
+function bulkExport(fmt){
+  var lines=webOrders.filter(function(o){return o.status==='accepted';}).map(function(o){return o.id+';'+o.client+';'+o.sum;}).join('\n');
+  var content=fmt==='csv'?'Номер;Клиент;Сумма\n'+lines:'<?xml version="1.0" encoding="UTF-8"?>\n<Заказы>\n  <Заявок>'+webOrders.length+'</Заявок>\n</Заказы>';
+  var blob=new Blob([content],{type:'text/plain;charset=utf-8'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url; a.download='bulk_orders_2025-03-26.'+fmt; a.click();
+  URL.revokeObjectURL(url);
+  showToast('Пакетный экспорт '+fmt.toUpperCase()+' · '+webOrders.length+' заявок ✓');
 }
 
-function setRole(r){
-  document.getElementById('app-tp').style.display=r==='tp'?'':'none';
-  document.getElementById('app-sv').style.display=r==='sv'?'':'none';
-  document.getElementById('rb-tp').classList.toggle('on',r==='tp');
-  document.getElementById('rb-sv').classList.toggle('on',r==='sv');
+// ── TOAST ──
+function showToast(msg){
+  var t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(function(){t.classList.remove('show');},2400);
 }
 
-function bTab(n){
-  [1,2,3].forEach(function(i){
-    document.getElementById('bp'+i).style.display=i===n?'block':'none';
-    document.getElementById('bt'+i).classList.toggle('on',i===n);
-  });
-}
-
-var wPanes=['wd-dashboard','wd-team','wd-orders','wd-coverage'];
-function wNav(el,pane){
-  document.querySelectorAll('.web-nav-item').forEach(function(i){i.classList.remove('on');});
-  el.classList.add('on');
-  wPanes.forEach(function(p){var e=document.getElementById(p);if(e)e.style.display='none';});
-  var t=document.getElementById(pane);
-  if(t) t.style.display='';
-}
+// ── INIT ──
+renderPreview();
 </script>
 </body>
 </html>
