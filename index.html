@@ -704,19 +704,21 @@ renderPreview();
   .from('outlets')
   .select('*')
 console.log(data, error)
-  async function createVisit() {
+  function startVisit(outletId) {
+  createVisit(outletId)
+}
+async function createVisit(outletId) {
   const { data, error } = await supabase
     .from('visits')
     .insert({
       user_id: '6596bec5-fb17-4d7b-bf41-83899e10feee',
-      outlet_id: '0881ba15-e29c-45a8-a3f9-dad8c23c553f',
-      checkin_time: new Date(),
+      outlet_id: outletId,
+      checkin_time: new Date().toISOString(),
       status: 'in_progress'
     })
     .select()
   console.log('VISIT RESULT:', data, error)
 }
-  createVisit()
 </script>
 </body>
 </html>
