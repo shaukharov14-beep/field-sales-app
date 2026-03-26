@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Field Sales OS — Прототип</title>
+<link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --tg: #2AABEE;
+  --tg-dark: #1a8ac4;
+  --tg-header: #2AABEE;
+  --bg: #f0f4f7;
+  --card: #ffffff;
+  --border: rgba(0,0,0,0.08);
+  --text: #1a1a1a;
+  --text2: #666;
+  --text3: #aaa;
+  --green: #3B6D11; --green-bg: #EAF3DE; --green-border: #C0DD97;
+  --amber: #854F0B; --amber-bg: #FAEEDA; --amber-border: #FAC775;
+  --red: #A32D2D; --red-bg: #FCEBEB; --red-border: #F7C1C1;
+  --blue: #185FA5; --blue-bg: #E6F1FB; --blue-border: #B5D4F4;
+  --purple: #534AB7; --purple-bg: #EEEDFE;
+  --radius: 12px;
+  --font: 'Golos Text', sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body { font-family: var(--font); background: #e8edf2; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 20px 16px 40px; }
+
+/* Role switcher */
+.role-bar { display: flex; gap: 0; background: var(--card); border-radius: 50px; padding: 4px; margin-bottom: 16px; border: 1px solid var(--border); width: 100%; max-width: 420px; }
+.role-btn { flex: 1; padding: 8px 0; border-radius: 50px; border: none; font-family: var(--font); font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s; color: var(--text2); background: transparent; }
+.role-btn.on { background: var(--tg); color: #fff; }
+
+/* Phone frame */
+.phone-wrap { width: 100%; max-width: 390px; }
+.phone { background: var(--card); border-radius: 24px; overflow: hidden; border: 1px solid var(--border); box-shadow: 0 8px 32px rgba(0,0,0,0.12); min-height: 700px; display: flex; flex-direction: column; position: relative; }
+
+/* Status bar */
+.sbar { background: var(--tg-header); display: flex; justify-content: space-between; padding: 10px 18px 6px; }
+.sbar span { color: rgba(255,255,255,0.9); font-size: 11px; font-weight: 600; }
+
+/* Header */
+.hdr { background: var(--tg-header); padding: 8px 14px 12px; display: flex; align-items: center; gap: 10px; }
+.hdr-back { color: #fff; font-size: 22px; cursor: pointer; line-height: 1; width: 24px; flex-shrink: 0; user-select: none; }
+.hdr-av { width: 34px; height: 34px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 12px; font-weight: 600; flex-shrink: 0; }
+.hdr-text { flex: 1; }
+.hdr-title { color: #fff; font-size: 15px; font-weight: 600; }
+.hdr-sub { color: rgba(255,255,255,0.75); font-size: 11px; margin-top: 1px; }
+.hdr-action { color: rgba(255,255,255,0.85); font-size: 12px; cursor: pointer; white-space: nowrap; }
+
+/* Screen body */
+.screen { flex: 1; background: var(--bg); overflow-y: auto; padding: 10px 10px 80px; }
+
+/* Bottom nav */
+.bnav { background: var(--card); border-top: 1px solid var(--border); display: flex; padding: 6px 0 10px; flex-shrink: 0; }
+.bnav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; padding: 4px 0; }
+.bnav-btn svg { width: 22px; height: 22px; }
+.bnav-lbl { font-size: 10px; color: var(--text3); font-family: var(--font); }
+.bnav-btn.active .bnav-lbl { color: var(--tg); }
+
+/* Cards */
+.card { background: var(--card); border-radius: var(--radius); border: 1px solid var(--border); margin-bottom: 8px; overflow: hidden; }
+.card-p { padding: 12px 14px; }
+
+/* Section label */
+.sec-lbl { font-size: 10px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; margin: 10px 0 6px; padding: 0 2px; }
+
+/* Pills / badges */
+.pill { font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: 600; display: inline-block; }
+.pill-green { background: var(--green-bg); color: var(--green); }
+.pill-amber { background: var(--amber-bg); color: var(--amber); }
+.pill-red { background: var(--red-bg); color: var(--red); }
+.pill-blue { background: var(--blue-bg); color: var(--blue); }
+.pill-purple { background: var(--purple-bg); color: var(--purple); }
+.pill-gray { background: #f0f0f0; color: #666; }
+
+/* Tags row */
+.tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+.tag { font-size: 10px; padding: 3px 8px; border-radius: 10px; font-weight: 500; }
+
+/* Info rows */
+.irow { display: flex; justify-content: space-between; align-items: center; padding: 7px 14px; border-bottom: 1px solid var(--border); font-size: 12px; }
+.irow:last-child { border-bottom: none; }
+.ik { color: var(--text2); }
+.iv { font-weight: 500; color: var(--text); text-align: right; }
+
+/* Qty control */
+.qty-wrap { display: flex; align-items: center; gap: 8px; }
+.qty-btn { width: 28px; height: 28px; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 500; cursor: pointer; font-family: var(--font); transition: transform 0.1s; }
+.qty-btn:active { transform: scale(0.9); }
+.qty-btn.m { background: #f0f4f7; color: var(--text2); }
+.qty-btn.p { background: var(--tg); color: #fff; }
+.qty-val { font-size: 15px; font-weight: 600; color: var(--text); min-width: 22px; text-align: center; }
+
+/* Big button */
+.big-btn { width: 100%; background: var(--tg); color: #fff; border: none; border-radius: 14px; padding: 14px; font-size: 15px; font-weight: 600; cursor: pointer; font-family: var(--font); transition: background 0.15s; }
+.big-btn:active { background: var(--tg-dark); }
+.big-btn-outline { width: 100%; background: var(--card); color: var(--tg); border: 1.5px solid var(--tg); border-radius: 14px; padding: 13px; font-size: 15px; font-weight: 600; cursor: pointer; font-family: var(--font); margin-top: 8px; }
+
+/* AI banner */
+.ai-card { background: var(--green-bg); border: 1px solid var(--green-border); border-radius: var(--radius); padding: 10px 12px; margin-bottom: 8px; }
+.ai-hdr { display: flex; align-items: center; gap: 6px; margin-bottom: 5px; }
+.ai-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+.ai-title { font-size: 11px; font-weight: 600; color: var(--green); }
+.ai-body { font-size: 12px; color: #27500A; line-height: 1.5; }
+.ai-chips { display: flex; gap: 5px; margin-top: 7px; flex-wrap: wrap; }
+.chip { font-size: 11px; background: var(--card); border: 1px solid var(--green-border); color: var(--green); padding: 4px 10px; border-radius: 10px; cursor: pointer; font-family: var(--font); font-weight: 500; transition: background 0.1s; }
+.chip:active { background: var(--green-bg); }
+
+.warn-card { background: var(--amber-bg); border: 1px solid var(--amber-border); border-radius: var(--radius); padding: 10px 12px; margin-bottom: 8px; }
+.warn-hdr { display: flex; align-items: center; gap: 6px; margin-bottom: 5px; }
+.warn-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--amber); flex-shrink: 0; }
+.warn-title { font-size: 11px; font-weight: 600; color: var(--amber); }
+.warn-body { font-size: 12px; color: #633806; line-height: 1.5; }
+
+/* Date chip */
+.date-chip { background: rgba(42,171,238,0.12); color: var(--tg-dark); font-size: 11px; font-weight: 600; border-radius: 12px; padding: 3px 14px; text-align: center; margin: 6px auto 10px; display: table; }
+
+/* Stat grid */
+.stat-grid { display: grid; gap: 8px; margin-bottom: 10px; }
+.stat-grid-3 { grid-template-columns: repeat(3, 1fr); }
+.stat-grid-4 { grid-template-columns: repeat(4, 1fr); }
+.stat-card { background: var(--card); border-radius: 10px; border: 1px solid var(--border); padding: 10px 8px; text-align: center; }
+.stat-n { font-size: 20px; font-weight: 600; color: var(--text); }
+.stat-l { font-size: 10px; color: var(--text2); margin-top: 2px; line-height: 1.3; }
+
+/* Route card */
+.rt-card { background: var(--card); border-radius: var(--radius); border: 1px solid var(--border); margin-bottom: 7px; overflow: hidden; cursor: pointer; transition: opacity 0.1s; }
+.rt-card:active { opacity: 0.85; }
+.rt-top { display: flex; align-items: center; gap: 10px; padding: 10px 12px; }
+.rt-ico { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.rt-info { flex: 1; min-width: 0; }
+.rt-name { font-size: 14px; font-weight: 600; color: var(--text); }
+.rt-addr { font-size: 11px; color: var(--text2); margin-top: 1px; }
+.rt-right { text-align: right; flex-shrink: 0; }
+.rt-time { font-size: 11px; color: var(--text2); margin-bottom: 4px; }
+.rt-bar { height: 3px; background: #e8e8e8; margin: 0 12px 8px; border-radius: 2px; }
+.rt-fill { height: 100%; border-radius: 2px; transition: width 0.3s; }
+.rt-dist { font-size: 11px; color: var(--tg); padding: 0 12px 8px; display: flex; align-items: center; gap: 4px; }
+
+/* Map mock */
+.map-mock { height: 170px; background: #dce8f0; position: relative; overflow: hidden; }
+.map-road-h { position: absolute; background: rgba(255,255,255,0.7); height: 3px; width: 100%; }
+.map-road-v { position: absolute; background: rgba(255,255,255,0.7); width: 3px; height: 100%; }
+.map-grid-h { position: absolute; background: rgba(255,255,255,0.3); height: 1px; width: 100%; }
+.map-grid-v { position: absolute; background: rgba(255,255,255,0.3); width: 1px; height: 100%; }
+.map-pin { position: absolute; width: 32px; height: 32px; border-radius: 50%; background: var(--tg); display: flex; align-items: center; justify-content: center; top: 50%; left: 50%; transform: translate(-50%, -55%); }
+.map-ring1 { position: absolute; width: 52px; height: 52px; border-radius: 50%; border: 2px solid rgba(42,171,238,0.3); top: 50%; left: 50%; transform: translate(-50%, -55%); }
+.map-ring2 { position: absolute; width: 76px; height: 76px; border-radius: 50%; border: 1.5px solid rgba(42,171,238,0.15); top: 50%; left: 50%; transform: translate(-50%, -55%); }
+
+/* SKU card */
+.sku-card { background: var(--card); border-radius: var(--radius); border: 1px solid var(--border); margin-bottom: 6px; overflow: hidden; }
+.sku-top { display: flex; align-items: center; gap: 10px; padding: 10px 12px; }
+.sku-img { width: 42px; height: 42px; border-radius: 9px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.sku-meta { flex: 1; min-width: 0; }
+.sku-name { font-size: 13px; font-weight: 600; color: var(--text); }
+.sku-sub { font-size: 10px; color: var(--text2); margin-top: 1px; }
+.sku-price { text-align: right; flex-shrink: 0; }
+.sku-pval { font-size: 14px; font-weight: 600; color: var(--text); }
+.sku-ptype { font-size: 9px; color: var(--text2); }
+.sku-foot { display: flex; align-items: center; justify-content: space-between; padding: 6px 12px 9px; border-top: 1px solid rgba(0,0,0,0.05); }
+.stock-row { display: flex; align-items: center; gap: 5px; }
+.sdot { width: 6px; height: 6px; border-radius: 50%; }
+
+/* Cart bar */
+.cart-bar { background: var(--tg); margin: 8px 0 0; border-radius: var(--radius); padding: 12px 14px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: background 0.15s; }
+.cart-bar:active { background: var(--tg-dark); }
+.cart-left { display: flex; align-items: center; gap: 8px; }
+.cart-badge { background: rgba(255,255,255,0.25); color: #fff; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 10px; }
+.cart-lbl { color: #fff; font-size: 13px; font-weight: 600; }
+.cart-total { color: #fff; font-size: 15px; font-weight: 600; }
+
+/* Balance */
+.coin-hero { background: var(--tg); border-radius: 16px; padding: 18px; margin-bottom: 10px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.coin-ico { width: 54px; height: 54px; border-radius: 50%; background: #FFD700; display: flex; align-items: center; justify-content: center; margin-bottom: 4px; border: 3px solid #FFA000; font-size: 24px; font-weight: 700; color: #E65100; }
+.coin-bal { font-size: 34px; font-weight: 700; color: #fff; }
+.coin-lbl { font-size: 12px; color: rgba(255,255,255,0.8); }
+.coin-change { font-size: 11px; background: rgba(255,255,255,0.2); color: #fff; padding: 3px 12px; border-radius: 12px; margin-top: 2px; }
+
+/* Tab row */
+.tab-row { display: flex; background: var(--card); border-radius: 10px; border: 1px solid var(--border); overflow: hidden; margin-bottom: 10px; }
+.tab { flex: 1; padding: 8px 0; text-align: center; font-size: 11px; color: var(--text2); cursor: pointer; border: none; background: transparent; font-family: var(--font); font-weight: 500; transition: all 0.15s; }
+.tab.on { background: var(--tg); color: #fff; }
+
+/* Shop grid */
+.shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+.shop-card { background: var(--card); border-radius: var(--radius); border: 1px solid var(--border); overflow: hidden; cursor: pointer; }
+.shop-img { height: 72px; display: flex; align-items: center; justify-content: center; font-size: 32px; }
+.shop-body { padding: 8px 10px 10px; }
+.shop-name { font-size: 12px; font-weight: 600; color: var(--text); line-height: 1.3; }
+.shop-coins { display: flex; align-items: center; gap: 4px; margin-top: 5px; }
+.shop-cv { font-size: 14px; font-weight: 700; color: #F57F17; }
+.shop-btn { margin-top: 7px; background: var(--tg); color: #fff; border: none; border-radius: 8px; padding: 6px 0; font-size: 11px; font-weight: 600; width: 100%; cursor: pointer; font-family: var(--font); }
+.shop-btn.dis { background: #e8e8e8; color: #aaa; cursor: default; }
+
+/* Rank */
+.rank-card { background: var(--card); border-radius: var(--radius); border: 1px solid var(--border); overflow: hidden; }
+.rank-row { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-bottom: 1px solid var(--border); }
+.rank-row:last-child { border-bottom: none; }
+.rank-row.me { background: var(--blue-bg); }
+.rank-num { font-size: 13px; font-weight: 600; color: var(--text2); min-width: 18px; text-align: center; }
+.rank-av { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; flex-shrink: 0; }
+.rank-name { flex: 1; font-size: 12px; color: var(--text); }
+.rank-coins { font-size: 12px; font-weight: 700; color: #F57F17; }
+
+/* Progress bar */
+.prog-bar { height: 5px; background: rgba(0,0,0,0.06); border-radius: 3px; overflow: hidden; margin-top: 3px; }
+.prog-fill { height: 100%; border-radius: 3px; }
+
+/* Rep bar in dashboard */
+.rep-bar { display: flex; align-items: center; gap: 8px; background: var(--card); border-radius: 10px; padding: 8px 12px; border: 1px solid var(--border); margin-bottom: 6px; }
+.rep-av { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; flex-shrink: 0; }
+.rep-info { flex: 1; }
+.rep-name { font-size: 12px; font-weight: 600; color: var(--text); }
+.rep-pct { font-size: 11px; color: var(--text2); min-width: 32px; text-align: right; }
+
+/* Web dashboard */
+.web-shell { background: var(--card); border-radius: 20px; overflow: hidden; border: 1px solid var(--border); box-shadow: 0 8px 32px rgba(0,0,0,0.1); width: 100%; max-width: 860px; }
+.web-sidebar { width: 200px; background: var(--card); border-right: 1px solid var(--border); flex-shrink: 0; display: flex; flex-direction: column; }
+.web-main { flex: 1; background: var(--bg); overflow: hidden; display: flex; flex-direction: column; min-width: 0; }
+.web-layout { display: flex; min-height: 600px; }
+.web-topbar { background: var(--card); border-bottom: 1px solid var(--border); padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; }
+.web-content { padding: 18px 20px; overflow-y: auto; flex: 1; }
+.web-logo { padding: 16px 18px 12px; border-bottom: 1px solid var(--border); }
+.web-logo-t { font-size: 14px; font-weight: 700; color: var(--text); }
+.web-logo-s { font-size: 10px; color: var(--text2); margin-top: 1px; }
+.web-nav { padding: 10px 0; flex: 1; }
+.web-nav-s { font-size: 9px; font-weight: 700; color: var(--text3); padding: 10px 18px 4px; text-transform: uppercase; letter-spacing: 0.08em; }
+.web-nav-item { display: flex; align-items: center; gap: 9px; padding: 8px 18px; font-size: 12px; color: var(--text2); cursor: pointer; border-left: 2px solid transparent; transition: all 0.1s; }
+.web-nav-item:hover { background: var(--bg); color: var(--text); }
+.web-nav-item.on { background: var(--blue-bg); color: var(--blue); border-left-color: var(--blue); font-weight: 600; }
+.web-metric { background: var(--card); border-radius: 10px; border: 1px solid var(--border); padding: 12px 14px; }
+.web-metric-n { font-size: 24px; font-weight: 700; color: var(--text); }
+.web-metric-l { font-size: 11px; color: var(--text2); margin-top: 2px; }
+.web-metric-d { font-size: 11px; margin-top: 4px; }
+.web-grid-4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-bottom: 16px; }
+.web-card { background: var(--card); border-radius: 12px; border: 1px solid var(--border); padding: 14px; margin-bottom: 12px; }
+.web-card-title { font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 12px; }
+.web-prog-row { margin-bottom: 9px; }
+.web-prog-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--text2); margin-bottom: 3px; }
+
+/* Success screen */
+.success-ico { width: 68px; height: 68px; border-radius: 50%; background: var(--green-bg); display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; }
+
+/* Feedback form */
+.fb-textarea { width: 100%; border: 1px solid #e0e0e0; border-radius: 8px; padding: 9px 11px; font-size: 12px; color: var(--text); font-family: var(--font); resize: none; background: #fafafa; outline: none; }
+.fb-textarea:focus { border-color: var(--tg); }
+.fb-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
+.fb-reward { font-size: 11px; color: #F57F17; font-weight: 600; }
+.fb-send { background: var(--tg); color: #fff; border: none; border-radius: 8px; padding: 8px 16px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: var(--font); }
+
+/* History */
+.hist-row { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-bottom: 1px solid var(--border); }
+.hist-row:last-child { border-bottom: none; }
+.hist-ico { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.hist-info { flex: 1; }
+.hist-name { font-size: 12px; font-weight: 600; color: var(--text); }
+.hist-date { font-size: 10px; color: var(--text2); margin-top: 1px; }
+.hist-amt { font-size: 13px; font-weight: 700; }
+
+/* Transition */
+.screen-fade { animation: fadeIn 0.18s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Scrollbar */
+.screen::-webkit-scrollbar { width: 3px; }
+.screen::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 3px; }
+
+/* Category pills scroll */
+.cat-scroll { display: flex; gap: 6px; margin-bottom: 8px; overflow-x: auto; padding-bottom: 2px; }
+.cat-scroll::-webkit-scrollbar { display: none; }
+.cat-pill { font-size: 11px; padding: 5px 13px; border-radius: 14px; border: 1px solid var(--border); background: var(--card); color: var(--text2); cursor: pointer; white-space: nowrap; font-family: var(--font); font-weight: 500; flex-shrink: 0; transition: all 0.1s; }
+.cat-pill.on { background: var(--tg); color: #fff; border-color: var(--tg); }
+
+/* Event row */
+.ev-row { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-bottom: 1px solid var(--border); }
+.ev-row:last-child { border-bottom: none; }
+.ev-ico { width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+.no-select { user-select: none; }
+</style>
+</head>
+<body>
+
+<div class="role-bar no-select">
+  <button class="role-btn on" id="rb-tp" onclick="setRole('tp')">Торговый представитель</button>
+  <button class="role-btn" id="rb-sv" onclick="setRole('sv')">Руководитель</button>
+</div>
+
+<!-- TP MOBILE APP -->
+<div id="app-tp" class="phone-wrap">
+<div class="phone">
+  <div class="sbar"><span>10:24</span><span>●●●</span></div>
+
+  <!-- SCREEN: HOME -->
+  <div id="s-home" class="screen screen-fade" style="padding-bottom:10px;">
+    <div class="hdr" style="display:flex;">
+      <div class="hdr-av">АС</div>
+      <div class="hdr-text"><div class="hdr-title">Field Sales</div><div class="hdr-sub">Асель Сейткали · ТП</div></div>
+    </div>
+    <div style="padding:10px 10px 80px;background:var(--bg);flex:1;">
+      <div class="date-chip">Среда, 26 марта</div>
+      <div class="stat-grid stat-grid-3">
+        <div class="stat-card"><div class="stat-n" style="color:var(--tg)">5</div><div class="stat-l">Выполнено</div></div>
+        <div class="stat-card"><div class="stat-n">3</div><div class="stat-l">Осталось</div></div>
+        <div class="stat-card"><div class="stat-n" style="color:#e65100">1</div><div class="stat-l">Пропущено</div></div>
+      </div>
+      <div class="sec-lbl">Маршрут сегодня</div>
+      <div class="rt-card" onclick="goTo('s-client')">
+        <div class="rt-top">
+          <div class="rt-ico" style="background:#fff3e0;"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="3" y="5" width="16" height="14" rx="2" fill="#e65100" opacity=".15"/><rect x="3" y="5" width="16" height="14" rx="2" stroke="#e65100" stroke-width="1.5"/><path d="M7 5V3M15 5V3M3 9h16" stroke="#e65100" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+          <div class="rt-info"><div class="rt-name">Магазин «Арман»</div><div class="rt-addr">ул. Байзакова, 14</div></div>
+          <div class="rt-right"><div class="rt-time">10:00</div><span class="pill pill-amber">Сейчас</span></div>
+        </div>
+        <div class="rt-dist"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="5" r="2.5" stroke="var(--tg)" stroke-width="1.2"/><path d="M6 10C6 10 2 7 2 5a4 4 0 018 0c0 2-4 5-4 5z" stroke="var(--tg)" stroke-width="1.2" fill="none"/></svg>320 м · ~4 мин</div>
+        <div class="rt-bar"><div class="rt-fill" style="width:0%;background:var(--tg);"></div></div>
+      </div>
+      <div class="rt-card">
+        <div class="rt-top">
+          <div class="rt-ico" style="background:var(--green-bg);"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="3" y="5" width="16" height="14" rx="2" fill="#3B6D11" opacity=".15"/><rect x="3" y="5" width="16" height="14" rx="2" stroke="#3B6D11" stroke-width="1.5"/><path d="M7 5V3M15 5V3M3 9h16" stroke="#3B6D11" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+          <div class="rt-info"><div class="rt-name">Береке Маркет</div><div class="rt-addr">пр. Абая, 88</div></div>
+          <div class="rt-right"><div class="rt-time">11:30</div><span class="pill pill-green">Выполнен</span></div>
+        </div>
+        <div class="rt-bar"><div class="rt-fill" style="width:100%;background:#3B6D11;"></div></div>
+      </div>
+      <div class="rt-card">
+        <div class="rt-top">
+          <div class="rt-ico" style="background:#f5f5f5;"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="3" y="5" width="16" height="14" rx="2" stroke="#ccc" stroke-width="1.5"/><path d="M7 5V3M15 5V3M3 9h16" stroke="#ccc" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+          <div class="rt-info"><div class="rt-name">Киоск №12</div><div class="rt-addr">ул. Толе би, 5</div></div>
+          <div class="rt-right"><div class="rt-time">13:00</div><span class="pill pill-gray">Следующий</span></div>
+        </div>
+        <div class="rt-bar"><div class="rt-fill" style="width:0%"></div></div>
+      </div>
+      <div class="rt-card">
+        <div class="rt-top">
+          <div class="rt-ico" style="background:#f5f5f5;"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="3" y="5" width="16" height="14" rx="2" stroke="#ccc" stroke-width="1.5"/><path d="M7 5V3M15 5V3M3 9h16" stroke="#ccc" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+          <div class="rt-info"><div class="rt-name">Жулдыз Мини-маркет</div><div class="rt-addr">ул. Гоголя, 22</div></div>
+          <div class="rt-right"><div class="rt-time">14:30</div><span class="pill pill-gray">Следующий</span></div>
+        </div>
+        <div class="rt-bar"><div class="rt-fill" style="width:0%"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN: CLIENT PROFILE -->
+  <div id="s-client" class="screen screen-fade" style="display:none;">
+    <div class="hdr"><div class="hdr-back" onclick="goTo('s-home')">‹</div><div class="hdr-av" style="background:#e65100;">АР</div><div class="hdr-text"><div class="hdr-title">Магазин «Арман»</div><div class="hdr-sub">ул. Байзакова, 14</div></div></div>
+    <div style="padding:10px;background:var(--bg);flex:1;">
+      <div class="card card-p" style="margin-bottom:8px;">
+        <div class="tags">
+          <span class="tag" style="background:var(--blue-bg);color:var(--blue);">Магазин</span>
+          <span class="tag" style="background:var(--green-bg);color:var(--green);">Активный</span>
+          <span class="tag" style="background:var(--purple-bg);color:var(--purple);">Хозяин-продавец</span>
+          <span class="tag" style="background:var(--amber-bg);color:var(--amber);">Жилой район</span>
+        </div>
+      </div>
+      <div class="ai-card">
+        <div class="ai-hdr"><div class="ai-dot"></div><div class="ai-title">AI — лучшее время</div></div>
+        <div class="ai-body">Ерлан на месте до 12:00. Понедельник и вторник — пиковые дни продаж. Сейчас хорошая ликвидность.</div>
+      </div>
+      <div class="warn-card">
+        <div class="warn-hdr"><div class="warn-dot"></div><div class="warn-title">Внимание</div></div>
+        <div class="warn-body">День рождения Ерлана через 3 дня (29 марта). Хороший повод для визита.</div>
+      </div>
+      <div class="sec-lbl">О клиенте</div>
+      <div class="card">
+        <div class="irow"><span class="ik">Тип</span><span class="iv">Хозяин-продавец</span></div>
+        <div class="irow"><span class="ik">Контакт</span><span class="iv">Ерлан +7 777 123 45 67</span></div>
+        <div class="irow"><span class="ik">Форма оплаты</span><span class="iv">Отсрочка 14 дней</span></div>
+        <div class="irow"><span class="ik">Тип цены</span><span class="iv"><span class="pill pill-blue">Оптовая Б</span></span></div>
+        <div class="irow"><span class="ik">Долг</span><span class="iv" style="color:var(--red);">87 000 тг</span></div>
+        <div class="irow"><span class="ik">Последний заказ</span><span class="iv">18 марта · 38 200 тг</span></div>
+      </div>
+      <button class="big-btn" style="margin-top:4px;" onclick="goTo('s-checkin')">Начать визит — Чек-ин</button>
+    </div>
+  </div>
+
+  <!-- SCREEN: CHECK-IN -->
+  <div id="s-checkin" class="screen screen-fade" style="display:none;">
+    <div class="hdr"><div class="hdr-back" onclick="goTo('s-client')">‹</div><div class="hdr-text"><div class="hdr-title">Чек-ин</div><div class="hdr-sub">Магазин «Арман»</div></div></div>
+    <div style="padding:10px;background:var(--bg);">
+      <div class="card" style="margin-bottom:8px;">
+        <div class="map-mock">
+          <div class="map-grid-h" style="top:35%"></div><div class="map-grid-h" style="top:65%"></div>
+          <div class="map-grid-v" style="left:30%"></div><div class="map-grid-v" style="left:70%"></div>
+          <div class="map-road-h" style="top:52%"></div><div class="map-road-v" style="left:48%"></div>
+          <div class="map-ring2"></div><div class="map-ring1"></div>
+          <div class="map-pin"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="4" fill="#fff"/></svg></div>
+        </div>
+        <div class="irow"><span class="ik">Расстояние</span><span class="iv" style="color:var(--tg);">320 м — в радиусе ✓</span></div>
+        <div class="irow"><span class="ik">Геофенсинг</span><span class="iv" style="color:var(--green);">50 м — пройден</span></div>
+        <div class="irow"><span class="ik">Время</span><span class="iv">10:24</span></div>
+      </div>
+      <div class="ai-card">
+        <div class="ai-hdr"><div class="ai-dot"></div><div class="ai-title">Подсказка к визиту</div></div>
+        <div class="ai-body">Предложите Lay's Сметана — новинка. Прошлый раз брали 12 Coca-Cola, возможно нужно пополнить.</div>
+      </div>
+      <button class="big-btn" onclick="goTo('s-order')">Открыть каталог — оформить заказ</button>
+      <button class="big-btn-outline" onclick="goTo('s-home')">Визит не состоялся</button>
+    </div>
+  </div>
+
+  <!-- SCREEN: ORDER -->
+  <div id="s-order" class="screen screen-fade" style="display:none;">
+    <div class="hdr"><div class="hdr-back" onclick="goTo('s-checkin')">‹</div><div class="hdr-text"><div class="hdr-title">Оформить заказ</div><div class="hdr-sub">«Арман» · Цена: Оптовая Б</div></div></div>
+    <div style="padding:10px;background:var(--bg);">
+      <div class="ai-card" style="margin-bottom:8px;">
+        <div class="ai-hdr"><div class="ai-dot"></div><div class="ai-title">AI — прошлый заказ</div></div>
+        <div class="ai-body">18 марта: Coca-Cola ×12, Sprite ×6, Fanta ×4. Повторить?</div>
+        <div class="ai-chips"><div class="chip">Повторить</div><div class="chip">Что заканчивается</div></div>
+      </div>
+      <div class="cat-scroll">
+        <div class="cat-pill on">Все</div><div class="cat-pill">Напитки</div><div class="cat-pill">Снеки</div><div class="cat-pill">Молочное</div>
+      </div>
+      <div class="sku-card">
+        <div class="sku-top">
+          <div class="sku-img" style="background:#E3F2FD;"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="7" y="3" width="8" height="16" rx="3" fill="#90CAF9" stroke="#1565C0" stroke-width="1.2"/></svg></div>
+          <div class="sku-meta"><div class="sku-name">Coca-Cola 0.5л <span class="pill pill-purple" style="font-size:9px;">Хит</span></div><div class="sku-sub">арт. CC050</div></div>
+          <div class="sku-price"><div class="sku-pval">180 тг</div><div class="sku-ptype">Опт Б</div></div>
+        </div>
+        <div class="sku-foot">
+          <div class="stock-row"><div class="sdot" style="background:#3B6D11;"></div><span style="font-size:10px;color:var(--text2);">240 шт</span></div>
+          <div class="qty-wrap"><button class="qty-btn m" onclick="chg(0,-1)">−</button><span class="qty-val" id="q0">12</span><button class="qty-btn p" onclick="chg(0,1)">+</button></div>
+        </div>
+      </div>
+      <div class="sku-card">
+        <div class="sku-top">
+          <div class="sku-img" style="background:#E8F5E9;"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="7" y="3" width="8" height="16" rx="3" fill="#A5D6A7" stroke="#2E7D32" stroke-width="1.2"/></svg></div>
+          <div class="sku-meta"><div class="sku-name">Sprite 0.5л <span class="pill pill-green" style="font-size:9px;">Брал</span></div><div class="sku-sub">арт. SP050</div></div>
+          <div class="sku-price"><div class="sku-pval">175 тг</div><div class="sku-ptype">Опт Б</div></div>
+        </div>
+        <div class="sku-foot">
+          <div class="stock-row"><div class="sdot" style="background:#3B6D11;"></div><span style="font-size:10px;color:var(--text2);">180 шт</span></div>
+          <div class="qty-wrap"><button class="qty-btn m" onclick="chg(1,-1)">−</button><span class="qty-val" id="q1">6</span><button class="qty-btn p" onclick="chg(1,1)">+</button></div>
+        </div>
+      </div>
+      <div class="sku-card">
+        <div class="sku-top">
+          <div class="sku-img" style="background:#FFF3E0;"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="7" y="3" width="8" height="16" rx="3" fill="#FFCC80" stroke="#E65100" stroke-width="1.2"/></svg></div>
+          <div class="sku-meta"><div class="sku-name">Fanta Orange 0.5л</div><div class="sku-sub">арт. FO050</div></div>
+          <div class="sku-price"><div class="sku-pval">178 тг</div><div class="sku-ptype">Опт Б</div></div>
+        </div>
+        <div class="sku-foot">
+          <div class="stock-row"><div class="sdot" style="background:#EF9F27;"></div><span style="font-size:10px;color:#854F0B;">24 шт — мало!</span></div>
+          <div class="qty-wrap"><button class="qty-btn m" onclick="chg(2,-1)">−</button><span class="qty-val" id="q2">4</span><button class="qty-btn p" onclick="chg(2,1)">+</button></div>
+        </div>
+      </div>
+      <div class="sku-card">
+        <div class="sku-top">
+          <div class="sku-img" style="background:#F3E5F5;"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="7" y="3" width="8" height="16" rx="3" fill="#CE93D8" stroke="#7B1FA2" stroke-width="1.2"/></svg></div>
+          <div class="sku-meta"><div class="sku-name">Lay's Сметана 100г <span class="pill pill-amber" style="font-size:9px;">Новинка</span></div><div class="sku-sub">арт. LY100</div></div>
+          <div class="sku-price"><div class="sku-pval">290 тг</div><div class="sku-ptype">Опт Б</div></div>
+        </div>
+        <div class="sku-foot">
+          <div class="stock-row"><div class="sdot" style="background:#3B6D11;"></div><span style="font-size:10px;color:var(--text2);">96 шт</span></div>
+          <div class="qty-wrap"><button class="qty-btn m" onclick="chg(3,-1)">−</button><span class="qty-val" id="q3">0</span><button class="qty-btn p" onclick="chg(3,1)">+</button></div>
+        </div>
+      </div>
+      <div class="cart-bar" onclick="goTo('s-success')">
+        <div class="cart-left"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M2 2h2l2.4 8.4a1 1 0 001 .6h6.2a1 1 0 001-.76l1.4-5.24H4" stroke="#fff" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="7" cy="15" r="1" fill="#fff"/><circle cx="13" cy="15" r="1" fill="#fff"/></svg><span class="cart-badge" id="cnt">22 шт</span><span class="cart-lbl">Отправить заявку</span></div>
+        <span class="cart-total" id="ctotal">5 846 тг</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN: SUCCESS -->
+  <div id="s-success" class="screen screen-fade" style="display:none;">
+    <div class="hdr"><div class="hdr-text" style="text-align:center;padding:2px 0;"><div class="hdr-title">Визит завершён</div><div class="hdr-sub">Магазин «Арман»</div></div></div>
+    <div style="padding:16px;background:var(--bg);display:flex;flex-direction:column;align-items:center;text-align:center;">
+      <div style="margin:20px 0 14px;">
+        <div class="success-ico">
+          <svg width="34" height="34" viewBox="0 0 34 34" fill="none"><circle cx="17" cy="17" r="14" fill="#C8E6C9"/><path d="M10 17l5 5 9-9" stroke="#2e7d32" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:6px;">Заявка отправлена!</div>
+        <div style="font-size:13px;color:var(--text2);line-height:1.5;">Визит успешно завершён.<br>Оператор получил заявку.</div>
+      </div>
+      <div class="card" style="width:100%;margin-bottom:16px;">
+        <div class="irow"><span class="ik">Время</span><span class="iv">10:24 — 10:31</span></div>
+        <div class="irow"><span class="ik">Длительность</span><span class="iv">7 минут</span></div>
+        <div class="irow"><span class="ik">Сумма заказа</span><span class="iv" style="color:var(--tg);" id="final-sum">5 846 тг</span></div>
+        <div class="irow"><span class="ik">Бонусы</span><span class="iv" style="color:#F57F17;">+35 ₵ SalesCoins</span></div>
+      </div>
+      <button class="big-btn" onclick="goTo('s-home')">К следующей точке →</button>
+    </div>
+  </div>
+
+  <!-- SCREEN: BALANCE -->
+  <div id="s-balance" class="screen screen-fade" style="display:none;">
+    <div class="hdr"><div class="hdr-av">АС</div><div class="hdr-text"><div class="hdr-title">Мой баланс</div><div class="hdr-sub">SalesCoins</div></div></div>
+    <div style="padding:10px;background:var(--bg);">
+      <div class="coin-hero">
+        <div class="coin-ico">₵</div>
+        <div class="coin-bal">1 275</div>
+        <div class="coin-lbl">SalesCoins · Ваш баланс</div>
+        <div class="coin-change">+35 ₵ за сегодня</div>
+      </div>
+      <div class="tab-row">
+        <button class="tab on" id="bt1" onclick="bTab(1)">Заработать</button>
+        <button class="tab" id="bt2" onclick="bTab(2)">Магазин</button>
+        <button class="tab" id="bt3" onclick="bTab(3)">Рейтинг</button>
+      </div>
+      <div id="bp1">
+        <div class="sec-lbl">Источники коинов</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px;">
+          <div class="card card-p"><div style="background:var(--blue-bg);width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;margin-bottom:6px;"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5" stroke="var(--blue)" stroke-width="1.3"/><path d="M4.5 7l2 2 3-3" stroke="var(--blue)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div style="font-size:12px;font-weight:600;color:var(--text);">Визит по регламенту</div><div style="font-size:10px;color:var(--text2);margin-top:2px;">GPS + время</div><div style="font-size:12px;font-weight:700;color:#F57F17;margin-top:5px;">+10 ₵</div></div>
+          <div class="card card-p"><div style="background:var(--green-bg);width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;margin-bottom:6px;"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="2" y="3" width="10" height="9" rx="1.5" stroke="var(--green)" stroke-width="1.3"/></svg></div><div style="font-size:12px;font-weight:600;color:var(--text);">Продажа в визите</div><div style="font-size:10px;color:var(--text2);margin-top:2px;">Заказ от 500 тг</div><div style="font-size:12px;font-weight:700;color:#F57F17;margin-top:5px;">+25 ₵</div></div>
+          <div class="card card-p"><div style="background:var(--amber-bg);width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;margin-bottom:6px;"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="3" width="12" height="9" rx="1.5" stroke="var(--amber)" stroke-width="1.3"/><path d="M1 7h12" stroke="var(--amber)" stroke-width="1.2"/></svg></div><div style="font-size:12px;font-weight:600;color:var(--text);">Финансовая дисциплина</div><div style="font-size:10px;color:var(--text2);margin-top:2px;">Нет просрочки 30+ дн</div><div style="font-size:12px;font-weight:700;color:#F57F17;margin-top:5px;">+15 ₵</div></div>
+          <div class="card card-p"><div style="background:var(--purple-bg);width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;margin-bottom:6px;"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v3M7 10v3M1 7h3M10 7h3" stroke="var(--purple)" stroke-width="1.3" stroke-linecap="round"/><circle cx="7" cy="7" r="2.5" stroke="var(--purple)" stroke-width="1.3"/></svg></div><div style="font-size:12px;font-weight:600;color:var(--text);">Идея принята</div><div style="font-size:10px;color:var(--text2);margin-top:2px;">Обратная связь</div><div style="font-size:12px;font-weight:700;color:#F57F17;margin-top:5px;">+50 ₵</div></div>
+        </div>
+        <div class="sec-lbl">Последние начисления</div>
+        <div class="card">
+          <div class="hist-row"><div class="hist-ico" style="background:var(--green-bg);"><svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5" stroke="var(--green)" stroke-width="1.2"/><path d="M4 6.5l2 2 3.5-3.5" stroke="var(--green)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="hist-info"><div class="hist-name">Визит + продажа — «Арман»</div><div class="hist-date">Сегодня, 10:31</div></div><div class="hist-amt" style="color:var(--green);">+35 ₵</div></div>
+          <div class="hist-row"><div class="hist-ico" style="background:var(--purple-bg);"><svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1.5v2.5M6.5 9v2.5M1.5 6.5H4M9 6.5h2.5" stroke="var(--purple)" stroke-width="1.2" stroke-linecap="round"/><circle cx="6.5" cy="6.5" r="2" stroke="var(--purple)" stroke-width="1.2"/></svg></div><div class="hist-info"><div class="hist-name">Идея принята — новый отчёт</div><div class="hist-date">Вчера, 17:22</div></div><div class="hist-amt" style="color:var(--green);">+50 ₵</div></div>
+          <div class="hist-row"><div class="hist-ico" style="background:var(--red-bg);"><svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5" stroke="var(--red)" stroke-width="1.2"/><path d="M4.5 4.5l4 4M8.5 4.5l-4 4" stroke="var(--red)" stroke-width="1.2" stroke-linecap="round"/></svg></div><div class="hist-info"><div class="hist-name">Списание — наушники JBL</div><div class="hist-date">20 марта</div></div><div class="hist-amt" style="color:var(--red);">−800 ₵</div></div>
+        </div>
+        <div class="sec-lbl">Предложить идею</div>
+        <div class="card card-p">
+          <textarea class="fb-textarea" rows="3" placeholder="Ваша идея для команды или процессов..."></textarea>
+          <div class="fb-foot"><div class="fb-reward">+50 ₵ за принятую идею</div><button class="fb-send">Отправить</button></div>
+        </div>
+      </div>
+      <div id="bp2" style="display:none;">
+        <div class="sec-lbl">Обменять на награды</div>
+        <div class="shop-grid">
+          <div class="shop-card"><div class="shop-img" style="background:#FFF8E1;">🎒</div><div class="shop-body"><div class="shop-name">Рюкзак Nike</div><div class="shop-coins"><span style="font-size:12px;">₵</span><span class="shop-cv">300</span></div><button class="shop-btn">Обменять</button></div></div>
+          <div class="shop-card"><div class="shop-img" style="background:#E8F5E9;">🎧</div><div class="shop-body"><div class="shop-name">Наушники JBL</div><div class="shop-coins"><span style="font-size:12px;">₵</span><span class="shop-cv">800</span></div><button class="shop-btn">Обменять</button></div></div>
+          <div class="shop-card"><div class="shop-img" style="background:#E3F2FD;">🖥️</div><div class="shop-body"><div class="shop-name">Сертификат 5 000 тг</div><div class="shop-coins"><span style="font-size:12px;">₵</span><span class="shop-cv">500</span></div><button class="shop-btn">Обменять</button></div></div>
+          <div class="shop-card"><div class="shop-img" style="background:#FCE4EC;">✏️</div><div class="shop-body"><div class="shop-name">Канцелярия</div><div class="shop-coins"><span style="font-size:12px;">₵</span><span class="shop-cv">80</span></div><button class="shop-btn">Обменять</button></div></div>
+          <div class="shop-card"><div class="shop-img" style="background:#F3E5F5;">🔋</div><div class="shop-body"><div class="shop-name">Пауэрбанк</div><div class="shop-coins"><span style="font-size:12px;">₵</span><span class="shop-cv">1 200</span></div><button class="shop-btn dis">Не хватает 75 ₵</button></div></div>
+          <div class="shop-card"><div class="shop-img" style="background:#E8F5E9;">☕</div><div class="shop-body"><div class="shop-name">Чайник Tefal</div><div class="shop-coins"><span style="font-size:12px;">₵</span><span class="shop-cv">2 500</span></div><button class="shop-btn dis">Накопить</button></div></div>
+        </div>
+      </div>
+      <div id="bp3" style="display:none;">
+        <div class="sec-lbl">Рейтинг команды — март</div>
+        <div class="rank-card">
+          <div class="rank-row"><div class="rank-num" style="color:#F57F17;">1</div><div class="rank-av" style="background:var(--amber-bg);color:var(--amber);">БД</div><div class="rank-name">Бекзат Дуйсенов</div><div class="rank-coins">2 140 ₵</div></div>
+          <div class="rank-row"><div class="rank-num" style="color:#888;">2</div><div class="rank-av" style="background:var(--purple-bg);color:var(--purple);">МИ</div><div class="rank-name">Мадина Ибрагимова</div><div class="rank-coins">1 870 ₵</div></div>
+          <div class="rank-row"><div class="rank-num" style="color:#8D6E63;">3</div><div class="rank-av" style="background:var(--green-bg);color:var(--green);">НА</div><div class="rank-name">Назгуль Ахметова</div><div class="rank-coins">1 530 ₵</div></div>
+          <div class="rank-row me"><div class="rank-num" style="color:var(--blue);">4</div><div class="rank-av" style="background:var(--tg);color:#fff;">АС</div><div class="rank-name" style="color:var(--blue);font-weight:600;">Асель (вы)</div><div class="rank-coins">1 275 ₵</div></div>
+          <div class="rank-row"><div class="rank-num">5</div><div class="rank-av" style="background:var(--red-bg);color:var(--red);">ДК</div><div class="rank-name">Данияр Касымов</div><div class="rank-coins">890 ₵</div></div>
+        </div>
+        <div style="background:var(--blue-bg);border-radius:10px;padding:10px 12px;margin-top:8px;border:1px solid var(--blue-border);">
+          <div style="font-size:12px;font-weight:600;color:var(--blue);margin-bottom:2px;">До 3-го места: 255 ₵</div>
+          <div style="font-size:11px;color:#1a6fa0;">Ещё ~10 визитов с продажами — и обгоните Назгуль!</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom nav (for all TP screens) -->
+  <div class="bnav" id="bnav-tp">
+    <div class="bnav-btn active" id="nav-home" onclick="navTo('home')">
+      <svg viewBox="0 0 22 22" fill="none"><rect x="2" y="11" width="8" height="9" rx="1.5" stroke="var(--tg)" stroke-width="1.5"/><rect x="7" y="7" width="8" height="13" rx="1.5" stroke="var(--tg)" stroke-width="1.5"/><rect x="12" y="4" width="8" height="16" rx="1.5" stroke="var(--tg)" stroke-width="1.5"/></svg>
+      <span class="bnav-lbl" style="color:var(--tg);">Маршрут</span>
+    </div>
+    <div class="bnav-btn" id="nav-clients" onclick="navTo('clients')">
+      <svg viewBox="0 0 22 22" fill="none"><circle cx="11" cy="9" r="3.5" stroke="#aaa" stroke-width="1.5"/><path d="M3 19c0-3 3-5 8-5s8 2 8 5" stroke="#aaa" stroke-width="1.5" fill="none"/></svg>
+      <span class="bnav-lbl">Клиенты</span>
+    </div>
+    <div class="bnav-btn" id="nav-orders" onclick="navTo('orders')">
+      <svg viewBox="0 0 22 22" fill="none"><rect x="3" y="3" width="16" height="16" rx="3" stroke="#aaa" stroke-width="1.5"/><path d="M7 11h8M7 7h8M7 15h4" stroke="#aaa" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <span class="bnav-lbl">Заказы</span>
+    </div>
+    <div class="bnav-btn" id="nav-balance" onclick="navTo('balance')">
+      <svg viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="8" stroke="#aaa" stroke-width="1.5"/><circle cx="11" cy="11" r="3" fill="#FFD700"/></svg>
+      <span class="bnav-lbl">Баланс</span>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- SUPERVISOR WEB DASHBOARD -->
+<div id="app-sv" style="display:none;width:100%;max-width:860px;">
+<div class="web-shell">
+  <div class="web-layout">
+    <div class="web-sidebar">
+      <div class="web-logo"><div class="web-logo-t">Field Sales OS</div><div class="web-logo-s">Панель руководителя</div></div>
+      <div class="web-nav">
+        <div class="web-nav-s">Главное</div>
+        <div class="web-nav-item on" onclick="wNav(this,'wd-dashboard')"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="7" width="5" height="6" rx="1" stroke="currentColor" stroke-width="1.2"/><rect x="4" y="4" width="5" height="9" rx="1" stroke="currentColor" stroke-width="1.2"/><rect x="8" y="2" width="5" height="11" rx="1" stroke="currentColor" stroke-width="1.2"/></svg> Дашборд</div>
+        <div class="web-nav-item" onclick="wNav(this,'wd-team')"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="5" cy="4" r="2.5" stroke="currentColor" stroke-width="1.2"/><circle cx="10" cy="5" r="2" stroke="currentColor" stroke-width="1.2"/><path d="M1 11c0-2 1.5-3 4-3s4 1 4 3" stroke="currentColor" stroke-width="1.2" fill="none"/><path d="M10 8c1.5.3 2.5 1.2 2.5 2.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg> Команда</div>
+        <div class="web-nav-item" onclick="wNav(this,'wd-orders')"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="2" y="2" width="10" height="10" rx="2" stroke="currentColor" stroke-width="1.2"/><path d="M4 6h6M4 4.5h6M4 7.5h4" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg> Заявки</div>
+        <div class="web-nav-s">Аналитика</div>
+        <div class="web-nav-item" onclick="wNav(this,'wd-coverage')"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="6" r="2" stroke="currentColor" stroke-width="1.2"/><path d="M7 10C4 10 2 8 2 6a5 5 0 0110 0c0 2-2 4-5 4z" stroke="currentColor" stroke-width="1.2" fill="none"/></svg> Покрытие</div>
+        <div class="web-nav-item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="3" width="12" height="8" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M4 9V6M6 9V5M8 9V7M10 9V4" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg> Отчёты</div>
+        <div class="web-nav-s">Настройки</div>
+        <div class="web-nav-item"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="2.5" stroke="currentColor" stroke-width="1.2"/><path d="M7 1v2M7 11v2M1 7h2M11 7h2M2.5 2.5l1.5 1.5M10 10l1.5 1.5M2.5 11.5L4 10M10 4l1.5-1.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg> Настройки</div>
+      </div>
+    </div>
+    <div class="web-main">
+      <!-- DASHBOARD -->
+      <div id="wd-dashboard">
+        <div class="web-topbar"><div style="font-size:15px;font-weight:600;color:var(--text);">Дашборд</div><div style="display:flex;align-items:center;gap:10px;"><span style="font-size:12px;background:var(--blue-bg);color:var(--blue);padding:4px 12px;border-radius:20px;font-weight:500;">Март 2025</span><div style="width:30px;height:30px;border-radius:50%;background:var(--blue-bg);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--blue);">АД</div></div></div>
+        <div class="web-content">
+          <div class="web-grid-4">
+            <div class="web-metric"><div class="web-metric-n">148</div><div class="web-metric-l">Визиты сегодня</div><div class="web-metric-d" style="color:var(--green);">+12% к плану</div></div>
+            <div class="web-metric"><div class="web-metric-n">87%</div><div class="web-metric-l">Покрытие точек</div><div class="web-metric-d" style="color:var(--red);">−5% к цели</div></div>
+            <div class="web-metric"><div class="web-metric-n">64</div><div class="web-metric-l">Заявок сегодня</div><div class="web-metric-d" style="color:var(--green);">+8 к вчера</div></div>
+            <div class="web-metric"><div class="web-metric-n">2.4M</div><div class="web-metric-l">Выручка (тг)</div><div class="web-metric-d" style="color:var(--green);">+18% к плану</div></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:12px;">
+            <div class="web-card">
+              <div class="web-card-title">Выполнение маршрутов</div>
+              <div class="web-prog-row"><div class="web-prog-label"><span>Алматинский р-н</span><span style="font-weight:600;">94%</span></div><div class="prog-bar"><div class="prog-fill" style="width:94%;background:var(--blue);"></div></div></div>
+              <div class="web-prog-row"><div class="web-prog-label"><span>Центральный р-н</span><span style="font-weight:600;">81%</span></div><div class="prog-bar"><div class="prog-fill" style="width:81%;background:#1D9E75;"></div></div></div>
+              <div class="web-prog-row"><div class="web-prog-label"><span>Северный р-н</span><span style="font-weight:600;">67%</span></div><div class="prog-bar"><div class="prog-fill" style="width:67%;background:#EF9F27;"></div></div></div>
+              <div class="web-prog-row"><div class="web-prog-label"><span>Южный р-н</span><span style="font-weight:600;">55%</span></div><div class="prog-bar"><div class="prog-fill" style="width:55%;background:#E24B4A;"></div></div></div>
+            </div>
+            <div class="web-card">
+              <div class="web-card-title">Активность ТП</div>
+              <div class="rep-bar"><div class="rep-av" style="background:var(--blue-bg);color:var(--blue);">АС</div><div class="rep-info"><div class="rep-name">Асель С.</div><div class="prog-bar"><div class="prog-fill" style="width:94%;background:var(--blue);"></div></div></div><div class="rep-pct">94%</div></div>
+              <div class="rep-bar"><div class="rep-av" style="background:var(--green-bg);color:var(--green);">БД</div><div class="rep-info"><div class="rep-name">Бекзат Д.</div><div class="prog-bar"><div class="prog-fill" style="width:81%;background:var(--green);"></div></div></div><div class="rep-pct">81%</div></div>
+              <div class="rep-bar"><div class="rep-av" style="background:var(--amber-bg);color:var(--amber);">НА</div><div class="rep-info"><div class="rep-name">Назгуль А.</div><div class="prog-bar"><div class="prog-fill" style="width:57%;background:#EF9F27;"></div></div></div><div class="rep-pct">57%</div></div>
+              <div class="rep-bar"><div class="rep-av" style="background:var(--red-bg);color:var(--red);">ДК</div><div class="rep-info"><div class="rep-name">Данияр К.</div><div class="prog-bar"><div class="prog-fill" style="width:42%;background:#E24B4A;"></div></div></div><div class="rep-pct">42%</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- TEAM -->
+      <div id="wd-team" style="display:none;">
+        <div class="web-topbar"><div style="font-size:15px;font-weight:600;color:var(--text);">Команда</div><div style="background:var(--tg);color:#fff;font-size:12px;padding:6px 14px;border-radius:8px;cursor:pointer;font-weight:600;">+ Добавить ТП</div></div>
+        <div class="web-content">
+          <div style="background:var(--card);border-radius:12px;border:1px solid var(--border);overflow:hidden;">
+            <table style="width:100%;border-collapse:collapse;font-size:12px;">
+              <thead><tr style="background:var(--bg);"><th style="padding:9px 14px;text-align:left;font-size:11px;color:var(--text2);font-weight:600;border-bottom:1px solid var(--border);">Сотрудник</th><th style="padding:9px 14px;text-align:left;font-size:11px;color:var(--text2);font-weight:600;border-bottom:1px solid var(--border);">Визиты сегодня</th><th style="padding:9px 14px;text-align:left;font-size:11px;color:var(--text2);font-weight:600;border-bottom:1px solid var(--border);">Выручка</th><th style="padding:9px 14px;text-align:left;font-size:11px;color:var(--text2);font-weight:600;border-bottom:1px solid var(--border);">Покрытие</th><th style="padding:9px 14px;text-align:left;font-size:11px;color:var(--text2);font-weight:600;border-bottom:1px solid var(--border);">Статус</th></tr></thead>
+              <tbody>
+                <tr style="border-bottom:1px solid var(--border);"><td style="padding:10px 14px;"><div style="display:flex;align-items:center;gap:8px;"><div style="width:28px;height:28px;border-radius:50%;background:var(--blue-bg);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--blue);">АС</div><div><div style="font-weight:600;color:var(--text);">Асель Сейткали</div><div style="font-size:10px;color:var(--text2);">Алматинский р-н</div></div></div></td><td style="padding:10px 14px;">32 / 34</td><td style="padding:10px 14px;font-weight:600;">1 240 000 тг</td><td style="padding:10px 14px;"><span style="color:var(--green);font-weight:600;">94%</span></td><td style="padding:10px 14px;"><span class="pill pill-green">Активна</span></td></tr>
+                <tr style="border-bottom:1px solid var(--border);"><td style="padding:10px 14px;"><div style="display:flex;align-items:center;gap:8px;"><div style="width:28px;height:28px;border-radius:50%;background:var(--green-bg);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--green);">БД</div><div><div style="font-weight:600;color:var(--text);">Бекзат Дуйсенов</div><div style="font-size:10px;color:var(--text2);">Центральный р-н</div></div></div></td><td style="padding:10px 14px;">28 / 34</td><td style="padding:10px 14px;font-weight:600;">980 000 тг</td><td style="padding:10px 14px;"><span style="color:var(--green);font-weight:600;">81%</span></td><td style="padding:10px 14px;"><span class="pill pill-green">Активен</span></td></tr>
+                <tr style="border-bottom:1px solid var(--border);"><td style="padding:10px 14px;"><div style="display:flex;align-items:center;gap:8px;"><div style="width:28px;height:28px;border-radius:50%;background:var(--amber-bg);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--amber);">НА</div><div><div style="font-weight:600;color:var(--text);">Назгуль Ахметова</div><div style="font-size:10px;color:var(--text2);">Северный р-н</div></div></div></td><td style="padding:10px 14px;">19 / 34</td><td style="padding:10px 14px;font-weight:600;">620 000 тг</td><td style="padding:10px 14px;"><span style="color:var(--amber);font-weight:600;">57%</span></td><td style="padding:10px 14px;"><span class="pill pill-amber">Риск</span></td></tr>
+                <tr><td style="padding:10px 14px;"><div style="display:flex;align-items:center;gap:8px;"><div style="width:28px;height:28px;border-radius:50%;background:var(--red-bg);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--red);">ДК</div><div><div style="font-weight:600;color:var(--text);">Данияр Касымов</div><div style="font-size:10px;color:var(--text2);">Южный р-н</div></div></div></td><td style="padding:10px 14px;">11 / 34</td><td style="padding:10px 14px;font-weight:600;">310 000 тг</td><td style="padding:10px 14px;"><span style="color:var(--red);font-weight:600;">42%</span></td><td style="padding:10px 14px;"><span class="pill pill-red">Отстаёт</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <!-- ORDERS -->
+      <div id="wd-orders" style="display:none;">
+        <div class="web-topbar"><div style="font-size:15px;font-weight:600;color:var(--text);">Заявки</div><div style="display:flex;gap:8px;"><span style="font-size:12px;background:var(--green-bg);color:var(--green);padding:4px 12px;border-radius:20px;font-weight:600;">Сегодня: 64</span><span style="font-size:12px;background:var(--amber-bg);color:var(--amber);padding:4px 12px;border-radius:20px;font-weight:600;">Ожидают: 12</span></div></div>
+        <div class="web-content">
+          <div style="background:var(--card);border-radius:12px;border:1px solid var(--border);overflow:hidden;">
+            <table style="width:100%;border-collapse:collapse;font-size:12px;">
+              <thead><tr style="background:var(--bg);"><th style="padding:9px 14px;text-align:left;font-size:11px;color:var(--text2);font-weight:600;border-bottom:1px solid var(--border);">Клиент</th><th style="padding:9px 14px;text-align:left;font-size:11px;color:var(--text2);font-weight:600;border-bottom:1px solid var(--border);">ТП</th><th style="padding:9px 14px;text-align:left;font-size:11px;color:var(--text2);font-weight:600;border-bottom:1px solid var(--border);">Время</th><th style="padding:9px 14px;text-align:left;font-size:11px;color:var(--text2);font-weight:600;border-bottom:1px solid var(--border);">Сумма</th><th style="padding:9px 14px;text-align:left;font-size:11px;color:var(--text2);font-weight:600;border-bottom:1px solid var(--border);">Статус</th></tr></thead>
+              <tbody>
+                <tr style="border-bottom:1px solid var(--border);"><td style="padding:9px 14px;font-weight:600;">Магазин «Арман»</td><td style="padding:9px 14px;color:var(--text2);">Асель С.</td><td style="padding:9px 14px;color:var(--text2);">10:31</td><td style="padding:9px 14px;font-weight:600;color:var(--tg);">5 846 тг</td><td style="padding:9px 14px;"><span class="pill pill-amber">Ожидает</span></td></tr>
+                <tr style="border-bottom:1px solid var(--border);"><td style="padding:9px 14px;font-weight:600;">Береке Маркет</td><td style="padding:9px 14px;color:var(--text2);">Асель С.</td><td style="padding:9px 14px;color:var(--text2);">09:15</td><td style="padding:9px 14px;font-weight:600;color:var(--tg);">42 100 тг</td><td style="padding:9px 14px;"><span class="pill pill-green">Принята</span></td></tr>
+                <tr style="border-bottom:1px solid var(--border);"><td style="padding:9px 14px;font-weight:600;">Мегамарт</td><td style="padding:9px 14px;color:var(--text2);">Бекзат Д.</td><td style="padding:9px 14px;color:var(--text2);">08:55</td><td style="padding:9px 14px;font-weight:600;color:var(--tg);">118 400 тг</td><td style="padding:9px 14px;"><span class="pill pill-green">Принята</span></td></tr>
+                <tr><td style="padding:9px 14px;font-weight:600;">Жулдыз Маркет</td><td style="padding:9px 14px;color:var(--text2);">Назгуль А.</td><td style="padding:9px 14px;color:var(--text2);">07:42</td><td style="padding:9px 14px;font-weight:600;color:var(--tg);">21 600 тг</td><td style="padding:9px 14px;"><span class="pill pill-blue">Отгружена</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <!-- COVERAGE -->
+      <div id="wd-coverage" style="display:none;">
+        <div class="web-topbar"><div style="font-size:15px;font-weight:600;color:var(--text);">Покрытие точек</div><span style="font-size:12px;background:var(--blue-bg);color:var(--blue);padding:4px 12px;border-radius:20px;font-weight:600;">87% — 148/170 точек</span></div>
+        <div class="web-content">
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;">
+            <div class="web-metric"><div class="web-metric-n" style="color:var(--green);">118</div><div class="web-metric-l">Посещено сегодня</div></div>
+            <div class="web-metric"><div class="web-metric-n" style="color:var(--red);">22</div><div class="web-metric-l">Пропущено</div></div>
+            <div class="web-metric"><div class="web-metric-n" style="color:var(--amber);">30</div><div class="web-metric-l">Запланировано</div></div>
+          </div>
+          <div class="web-card">
+            <div class="web-card-title">Покрытие по районам</div>
+            <div class="web-prog-row"><div class="web-prog-label"><span>Алматинский р-н</span><span style="font-weight:600;color:var(--green);">94%</span></div><div class="prog-bar" style="height:8px;"><div class="prog-fill" style="width:94%;background:var(--blue);height:100%;"></div></div></div>
+            <div style="height:8px;"></div>
+            <div class="web-prog-row"><div class="web-prog-label"><span>Центральный р-н</span><span style="font-weight:600;color:var(--green);">81%</span></div><div class="prog-bar" style="height:8px;"><div class="prog-fill" style="width:81%;background:#1D9E75;height:100%;"></div></div></div>
+            <div style="height:8px;"></div>
+            <div class="web-prog-row"><div class="web-prog-label"><span>Северный р-н</span><span style="font-weight:600;color:var(--amber);">67%</span></div><div class="prog-bar" style="height:8px;"><div class="prog-fill" style="width:67%;background:#EF9F27;height:100%;"></div></div></div>
+            <div style="height:8px;"></div>
+            <div class="web-prog-row"><div class="web-prog-label"><span>Южный р-н</span><span style="font-weight:600;color:var(--red);">55%</span></div><div class="prog-bar" style="height:8px;"><div class="prog-fill" style="width:55%;background:#E24B4A;height:100%;"></div></div></div>
+            <div style="height:8px;"></div>
+            <div class="web-prog-row"><div class="web-prog-label"><span>Восточный р-н</span><span style="font-weight:600;color:var(--green);">88%</span></div><div class="prog-bar" style="height:8px;"><div class="prog-fill" style="width:88%;background:var(--blue);height:100%;"></div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+var prices=[180,175,178,290], qtys=[12,6,4,0];
+function chg(i,d){
+  qtys[i]=Math.max(0,qtys[i]+d);
+  document.getElementById('q'+i).textContent=qtys[i];
+  var t=0,c=0;
+  qtys.forEach(function(q,j){t+=q*prices[j];c+=q;});
+  document.getElementById('ctotal').textContent=t.toLocaleString('ru-RU')+' тг';
+  document.getElementById('cnt').textContent=c+' шт';
+  document.getElementById('final-sum').textContent=t.toLocaleString('ru-RU')+' тг';
+}
+
+var screens=['s-home','s-client','s-checkin','s-order','s-balance','s-success'];
+function goTo(id){
+  screens.forEach(function(s){
+    var el=document.getElementById(s);
+    if(el) el.style.display='none';
+  });
+  var target=document.getElementById(id);
+  if(target){target.style.display='';target.classList.remove('screen-fade');void target.offsetWidth;target.classList.add('screen-fade');}
+  document.getElementById('bnav-tp').style.display='flex';
+  if(id==='s-order'||id==='s-checkin'||id==='s-client'||id==='s-success') document.getElementById('bnav-tp').style.display='none';
+  if(id==='s-home') setNavActive('nav-home');
+  if(id==='s-balance') setNavActive('nav-balance');
+}
+
+function navTo(n){
+  if(n==='home') goTo('s-home');
+  if(n==='balance') goTo('s-balance');
+  if(n==='clients') goTo('s-client');
+  if(n==='orders') goTo('s-checkin');
+  setNavActive('nav-'+n);
+}
+
+function setNavActive(id){
+  ['nav-home','nav-clients','nav-orders','nav-balance'].forEach(function(n){
+    var el=document.getElementById(n);
+    if(el){el.classList.remove('active');el.querySelectorAll('svg path,svg rect,svg circle').forEach(function(p){p.setAttribute('stroke','#aaa');});el.querySelector('.bnav-lbl').style.color='#aaa';}
+  });
+  var el=document.getElementById(id);
+  if(el){el.classList.add('active');el.querySelector('.bnav-lbl').style.color='var(--tg)';}
+}
+
+function setRole(r){
+  document.getElementById('app-tp').style.display=r==='tp'?'':'none';
+  document.getElementById('app-sv').style.display=r==='sv'?'':'none';
+  document.getElementById('rb-tp').classList.toggle('on',r==='tp');
+  document.getElementById('rb-sv').classList.toggle('on',r==='sv');
+}
+
+function bTab(n){
+  [1,2,3].forEach(function(i){
+    document.getElementById('bp'+i).style.display=i===n?'block':'none';
+    document.getElementById('bt'+i).classList.toggle('on',i===n);
+  });
+}
+
+var wPanes=['wd-dashboard','wd-team','wd-orders','wd-coverage'];
+function wNav(el,pane){
+  document.querySelectorAll('.web-nav-item').forEach(function(i){i.classList.remove('on');});
+  el.classList.add('on');
+  wPanes.forEach(function(p){var e=document.getElementById(p);if(e)e.style.display='none';});
+  var t=document.getElementById(pane);
+  if(t) t.style.display='';
+}
+</script>
+</body>
+</html>
