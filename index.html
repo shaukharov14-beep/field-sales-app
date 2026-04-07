@@ -319,6 +319,66 @@ select.form-input option{background:var(--bg3)}
   </div>
 </div>
 
+<div id="modal-outlet-create" class="modal-overlay" onclick="cmi(event,'modal-outlet-create')">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Новая торговая точка</div>
+    <div class="modal-sub">Создание точки для маршрута торгового агента</div>
+    <div class="form-group">
+      <label class="form-label">Название точки</label>
+      <input class="form-input" id="outlet-name" placeholder="Например: Асар маркет">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Адрес</label>
+      <input class="form-input" id="outlet-addr" placeholder="ул. ..., дом ...">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Контакт</label>
+      <input class="form-input" id="outlet-contact" placeholder="Имя · +7 ...">
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <button class="btn btn-ghost btn-full" onclick="cm('modal-outlet-create')">Отмена</button>
+      <button class="btn btn-primary btn-full" onclick="createOutlet()">Создать</button>
+    </div>
+  </div>
+</div>
+
+<div id="modal-product-create" class="modal-overlay" onclick="cmi(event,'modal-product-create')">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Новая номенклатура</div>
+    <div class="modal-sub">Добавление SKU в каталог оператора</div>
+    <div class="form-group">
+      <label class="form-label">Название</label>
+      <input class="form-input" id="prod-name" placeholder="Например: Вода 1л">
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div class="form-group">
+        <label class="form-label">Единица</label>
+        <input class="form-input" id="prod-unit" placeholder="уп / л / кг">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Категория</label>
+        <input class="form-input" id="prod-cat" placeholder="Например: Напитки">
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div class="form-group">
+        <label class="form-label">Рекоменд. кол-во</label>
+        <input type="number" class="form-input" id="prod-sugg" value="10" min="0">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Цена (тг)</label>
+        <input type="number" class="form-input" id="prod-price" value="100" min="0">
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <button class="btn btn-ghost btn-full" onclick="cm('modal-product-create')">Отмена</button>
+      <button class="btn btn-primary btn-full" onclick="createProduct()">Добавить</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <script>
@@ -339,6 +399,8 @@ function initDB() {
   return {
     visits: [], orders: [], stock_entries: [], merch_reports: [],
     tasks: [], coins: {},
+    outlets: [],
+    products: [],
     prices: {
       1:180,2:420,3:320,4:680,5:390,6:1250,7:890,8:1100
     },
@@ -366,7 +428,7 @@ const USERS = {
   op:   {id:'op',name:'Зарина Исатова',role:'operator',short:'ЗИ'},
 };
 
-const OUTLETS = [
+const DEFAULT_OUTLETS = [
   {id:1,name:'Лидер маркет',addr:'ул. Пушкина, 12',contact:'Айгуль · +7 702 111 22 33',type:'Минимаркет',channel:'B',priority:'high',debt:45000,ai:'Высокая вероятность заказа',ait:'green'},
   {id:2,name:'Алма плюс',addr:'пр. Толе би, 44',contact:'Серик · +7 701 234 56 78',type:'Супермаркет',channel:'A',priority:'high',debt:0,ai:'Проверь остатки по вафлям',ait:'yellow'},
   {id:3,name:'Береке маркет',addr:'ул. Байзакова, 3',contact:'Дина · +7 705 987 65 43',type:'Минимаркет',channel:'C',priority:'medium',debt:12000,ai:'Риск отказа: высокий остаток',ait:'red'},
@@ -377,7 +439,7 @@ const OUTLETS = [
   {id:8,name:'Заря',addr:'ул. Горького, 8',contact:'Иван · +7 702 555 44 33',type:'Павильон',channel:'D',priority:'low',debt:0,ai:'Плановый визит',ait:'blue'},
 ];
 
-const PRODUCTS = [
+const DEFAULT_PRODUCTS = [
   {id:1,name:'Хлеб белый "Дала"',unit:'уп',cat:'Хлеб',sugg:10},
   {id:2,name:'Молоко 2.5% "Адал"',unit:'л',cat:'Молочка',sugg:20},
   {id:3,name:'Вафли "Сладкоежка"',unit:'уп',cat:'Снеки',sugg:15},
@@ -396,6 +458,15 @@ const MERCH_ITEMS = [
   {label:'Холодильник / брендзона OK',pts:20,key:'cooler_ok'},
   {label:'Выкладка по планограмме',pts:10,key:'planogram_ok'},
 ];
+
+function ensureDBSchema() {
+  if (!Array.isArray(db.outlets) || db.outlets.length===0) db.outlets = DEFAULT_OUTLETS.map(o=>({...o}));
+  if (!Array.isArray(db.products) || db.products.length===0) db.products = DEFAULT_PRODUCTS.map(p=>({...p}));
+}
+function getOutlets() { return db.outlets || []; }
+function getProducts() { return db.products || []; }
+ensureDBSchema();
+saveDB();
 
 // ═══════════════════════════════════════
 // STATE
@@ -442,6 +513,7 @@ function bootApp() {
   const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate()+1);
   const tdel = document.getElementById('task-deadline');
   if (tdel) tdel.value = tomorrow.toISOString().split('T')[0];
+  syncTaskOutletOptions();
   renderNav();
   renderCurrentScreen();
 }
@@ -532,7 +604,12 @@ function getTodayVisits(userId) {
 function getOutletVisit(outletId, userId) {
   return db.visits.find(v=>v.outlet_id===outletId && v.rep_id===userId && v.date===today());
 }
-function getPrice(productId) { return db.prices[productId] || PRODUCTS.find(p=>p.id===productId)?.sugg||0; }
+function getPrice(productId) { return db.prices[productId] || getProducts().find(p=>p.id===productId)?.sugg||0; }
+function syncTaskOutletOptions() {
+  const taskOutlet = document.getElementById('task-outlet');
+  if (!taskOutlet) return;
+  taskOutlet.innerHTML = getOutlets().map(o=>`<option>${o.name}</option>`).join('');
+}
 
 // ═══════════════════════════════════════
 // REP — TODAY
@@ -542,7 +619,7 @@ function renderToday() {
   const myVisits = getTodayVisits(curUser.id);
   const done = myVisits.filter(v=>v.status==='done').length;
   const succ = myVisits.filter(v=>v.result==='success').length;
-  const totalPlanned = OUTLETS.length;
+  const totalPlanned = getOutlets().length;
   const coins = getCoins(curUser.id);
   const todayCoins = (db.coins[curUser.id]||[])
     .filter(t=>t.time?.startsWith(today()))
@@ -630,13 +707,16 @@ function renderRoute() {
   const aChip={green:'chip-green',yellow:'chip-yellow',red:'chip-red',blue:'chip-blue'};
 
   el.innerHTML = `
-    <div class="page-title">Маршрут на день <span class="badge">${OUTLETS.length} точек</span></div>
+    <div class="page-title">Маршрут на день <span class="badge">${getOutlets().length} точек</span></div>
     <div style="padding:8px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
-      <span style="font-size:11px;color:var(--text3)">Выполнено: ${done} / ${OUTLETS.length}</span>
-      <div class="progress-wrap" style="width:120px"><div class="progress-bar" style="width:${OUTLETS.length?Math.round(done/OUTLETS.length*100):0}%;background:var(--accent)"></div></div>
+      <span style="font-size:11px;color:var(--text3)">Выполнено: ${done} / ${getOutlets().length}</span>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div class="progress-wrap" style="width:90px"><div class="progress-bar" style="width:${getOutlets().length?Math.round(done/getOutlets().length*100):0}%;background:var(--accent)"></div></div>
+        <button class="btn btn-ghost btn-sm" onclick="openOutletCreate()">+ Точка</button>
+      </div>
     </div>
     <div class="section">
-    ${OUTLETS.map((o,i)=>{
+    ${getOutlets().map((o,i)=>{
       const v = getOutletVisit(o.id, curUser.id);
       const status = v?.status||'pending';
       return `<div class="card" onclick="openOutlet(${o.id})" style="cursor:pointer" onmouseover="this.style.borderColor='var(--border2)'" onmouseout="this.style.borderColor='var(--border)'">
@@ -664,12 +744,35 @@ function renderRoute() {
     }).join('')}
     </div>`;
 }
+function openOutletCreate() {
+  document.getElementById('outlet-name').value = '';
+  document.getElementById('outlet-addr').value = '';
+  document.getElementById('outlet-contact').value = '';
+  om('modal-outlet-create');
+}
+function createOutlet() {
+  const name = document.getElementById('outlet-name').value.trim();
+  const addr = document.getElementById('outlet-addr').value.trim();
+  const contact = document.getElementById('outlet-contact').value.trim();
+  if (!name || !addr) { toast('Заполните название и адрес','var(--yellow)'); return; }
+  const nextId = Math.max(0, ...getOutlets().map(o=>Number(o.id)||0)) + 1;
+  db.outlets.push({
+    id:nextId, name, addr, contact:contact||'Контакт не указан',
+    type:'Минимаркет', channel:'C', priority:'medium', debt:0,
+    ai:'Новая точка — выполните первый визит', ait:'blue'
+  });
+  saveDB();
+  syncTaskOutletOptions();
+  cm('modal-outlet-create');
+  renderRoute();
+  toast('✅ Торговая точка добавлена');
+}
 
 // ═══════════════════════════════════════
 // REP — OUTLET
 // ═══════════════════════════════════════
 function openOutlet(outletId) {
-  curOutlet = OUTLETS.find(o=>o.id===outletId);
+  curOutlet = getOutlets().find(o=>o.id===outletId);
   curVisitId = getOutletVisit(outletId, curUser.id)?.id || null;
   renderOutlet();
   nav('rep-outlet');
@@ -765,7 +868,7 @@ function openStock() {
         <div style="font-size:9px;font-family:var(--mono);color:var(--text3);font-weight:600;text-align:center">ПОЛКА</div>
         <div style="font-size:9px;font-family:var(--mono);color:var(--text3);font-weight:600;text-align:center">СКЛАД</div>
       </div>
-      ${PRODUCTS.map(p=>`
+      ${getProducts().map(p=>`
         <div style="display:grid;grid-template-columns:1fr 72px 72px;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">
           <div>
             <div style="font-size:12px;font-weight:600">${p.name}</div>
@@ -784,7 +887,7 @@ function openStock() {
 
 function saveStock() {
   if (!curVisitId) { toast('Сначала выполните чек-ин','var(--yellow)'); return; }
-  const entries = PRODUCTS.map(p=>({
+  const entries = getProducts().map(p=>({
     product_id:p.id, product_name:p.name,
     shelf:parseInt(document.getElementById(`sh-${p.id}`)?.value||0),
     back:parseInt(document.getElementById(`bk-${p.id}`)?.value||0),
@@ -794,7 +897,7 @@ function saveStock() {
   const issues = [];
   entries.forEach(e=>{
     const total=e.shelf+e.back;
-    const p=PRODUCTS.find(x=>x.id===e.product_id);
+    const p=getProducts().find(x=>x.id===e.product_id);
     if(total<p.sugg) issues.push(`⚠ <b>${p.name}</b> — риск стокаута (${total} / мин ${p.sugg} ${p.unit})`);
     else if(total>p.sugg*3) issues.push(`📦 <b>${p.name}</b> — избыток (${total} ${p.unit}), заказ не нужен`);
   });
@@ -808,7 +911,7 @@ function saveStock() {
 // ═══════════════════════════════════════
 function openOrder() {
   orderSubmitted = false;
-  PRODUCTS.forEach(p=>{ if(!orderQtys[p.id]) orderQtys[p.id]=0; });
+  getProducts().forEach(p=>{ if(!orderQtys[p.id]) orderQtys[p.id]=0; });
   renderOrder();
   nav('rep-order');
 }
@@ -816,7 +919,7 @@ function openOrder() {
 function renderOrder() {
   const el = document.getElementById('rep-order');
   if (orderSubmitted) {
-    const total = PRODUCTS.reduce((s,p)=>s+(db.prices[p.id]||p.sugg)*(orderQtys[p.id]||0),0);
+    const total = getProducts().reduce((s,p)=>s+(db.prices[p.id]||p.sugg)*(orderQtys[p.id]||0),0);
     el.innerHTML = `
       <div class="detail-header">
         <div class="back-btn" onclick="nav('rep-outlet')"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg></div>
@@ -826,7 +929,7 @@ function renderOrder() {
         <div class="alert alert-success"><span>✅</span><span>Заказ передан оператору</span></div>
         <div class="card">
           <div class="stat-row"><span class="stat-label">Сумма заказа</span><span class="stat-val">${total.toLocaleString()} тг</span></div>
-          <div class="stat-row"><span class="stat-label">Позиций</span><span class="stat-val">${PRODUCTS.filter(p=>orderQtys[p.id]>0).length}</span></div>
+          <div class="stat-row"><span class="stat-label">Позиций</span><span class="stat-val">${getProducts().filter(p=>orderQtys[p.id]>0).length}</span></div>
           <div class="stat-row"><span class="stat-label">Коины начислены</span><span class="stat-val" style="color:var(--yellow)">+120 ⚡</span></div>
           <div class="stat-row"><span class="stat-label">Статус</span><span class="chip chip-blue">Новый · Ожидает оператора</span></div>
         </div>
@@ -837,7 +940,7 @@ function renderOrder() {
       </div>`;
     return;
   }
-  const total = PRODUCTS.reduce((s,p)=>s+(db.prices[p.id]||180)*(orderQtys[p.id]||0),0);
+  const total = getProducts().reduce((s,p)=>s+(db.prices[p.id]||180)*(orderQtys[p.id]||0),0);
   el.innerHTML = `
     <div class="detail-header">
       <div class="back-btn" onclick="nav('rep-outlet')"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg></div>
@@ -848,7 +951,7 @@ function renderOrder() {
         <div class="ai-label">⚡ Рекомендованный заказ</div>
         <div class="ai-text">По истории: молоко ×20, вафли ×15. Нажмите «Авто-заказ» для заполнения.</div>
       </div>
-      ${PRODUCTS.map(p=>`
+      ${getProducts().map(p=>`
         <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
           <div style="flex:1;min-width:0;margin-right:8px">
             <div style="font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name}</div>
@@ -875,16 +978,16 @@ function renderOrder() {
 function chQty(id, d) {
   orderQtys[id]=Math.max(0,(orderQtys[id]||0)+d);
   document.getElementById(`q${id}`).textContent=orderQtys[id];
-  const total=PRODUCTS.reduce((s,p)=>s+(db.prices[p.id]||180)*(orderQtys[p.id]||0),0);
+  const total=getProducts().reduce((s,p)=>s+(db.prices[p.id]||180)*(orderQtys[p.id]||0),0);
   const el=document.getElementById('ord-total'); if(el) el.textContent=total.toLocaleString()+' тг';
 }
 function autoOrder() {
-  PRODUCTS.forEach(p=>orderQtys[p.id]=p.sugg);
+  getProducts().forEach(p=>orderQtys[p.id]=p.sugg);
   renderOrder(); toast('⚡ Рекомендованные количества применены');
 }
 function openOrderConfirm() {
-  const total=PRODUCTS.reduce((s,p)=>s+(db.prices[p.id]||180)*(orderQtys[p.id]||0),0);
-  const items=PRODUCTS.filter(p=>orderQtys[p.id]>0).length;
+  const total=getProducts().reduce((s,p)=>s+(db.prices[p.id]||180)*(orderQtys[p.id]||0),0);
+  const items=getProducts().filter(p=>orderQtys[p.id]>0).length;
   if (!items) { toast('Добавьте товары в заказ','var(--yellow)'); return; }
   document.getElementById('ord-confirm-info').textContent=`${curOutlet?.name} · ${items} позиций · ${total.toLocaleString()} тг`;
   document.getElementById('ord-comment').value='';
@@ -892,8 +995,8 @@ function openOrderConfirm() {
 }
 function confirmOrder() {
   if (!curOutlet) return;
-  const total=PRODUCTS.reduce((s,p)=>s+(db.prices[p.id]||180)*(orderQtys[p.id]||0),0);
-  const items=PRODUCTS.filter(p=>orderQtys[p.id]>0).map(p=>({product_id:p.id,name:p.name,unit:p.unit,qty:orderQtys[p.id],price:db.prices[p.id]||180}));
+  const total=getProducts().reduce((s,p)=>s+(db.prices[p.id]||180)*(orderQtys[p.id]||0),0);
+  const items=getProducts().filter(p=>orderQtys[p.id]>0).map(p=>({product_id:p.id,name:p.name,unit:p.unit,qty:orderQtys[p.id],price:db.prices[p.id]||180}));
   const comment=document.getElementById('ord-comment').value;
   const orderId=uid();
   db.orders.push({
@@ -946,7 +1049,7 @@ function submitFinish() {
     if (v) { v.status='done'; v.result=finResult; v.failure_reason=finReason; v.notes=notes; v.checkout_time=now(); }
   }
   addCoins(curUser.id,coins,finResult==='success'?'Успешный визит':'Завершение визита');
-  const pending=OUTLETS.filter(o=>!getOutletVisit(o.id,curUser.id));
+  const pending=getOutlets().filter(o=>!getOutletVisit(o.id,curUser.id));
   document.getElementById('fin-result-text').textContent=finResult==='success'?'Заказ оформлен':'Без заказа' + (finReason?` · ${finReason}`:'');
   document.getElementById('fin-coins-val').textContent=`+${coins} ⚡`;
   document.getElementById('fin-time-val').textContent=now();
@@ -1090,7 +1193,7 @@ function renderSupDash() {
   const allVisits=db.visits.filter(v=>v.date===today());
   const done=allVisits.filter(v=>v.status==='done').length;
   const succ=allVisits.filter(v=>v.result==='success').length;
-  const planned=Object.keys(USERS).filter(k=>USERS[k].role==='rep').length * OUTLETS.length;
+  const planned=Object.keys(USERS).filter(k=>USERS[k].role==='rep').length * getOutlets().length;
   const orders=db.orders.filter(o=>o.date===today());
   const revenue=orders.reduce((s,o)=>s+o.total,0);
   const merchToday=db.merch_reports.filter(m=>m.date===today());
@@ -1168,7 +1271,7 @@ function renderSupTeam() {
     const coins=(db.coins[id]||[]).filter(t=>t.time?.startsWith(today())).reduce((s,t)=>s+t.amount,0);
     const orders=db.orders.filter(o=>o.rep_id===id&&o.date===today()).length;
     const status=done===0?'pending':conv>=70?'active':conv>=50?'behind':'risk';
-    return {...u,done,planned:OUTLETS.length,succ,conv,avgM,coins,orders,status};
+    return {...u,done,planned:getOutlets().length,succ,conv,avgM,coins,orders,status};
   });
   const sChip={active:'chip-green',behind:'chip-yellow',risk:'chip-red',pending:'chip-gray'};
   const sLabel={active:'Активен',behind:'Отстаёт',risk:'Риск',pending:'Не начал'};
@@ -1211,7 +1314,7 @@ function renderSupTeam() {
 function renderSupRisks() {
   const el=document.getElementById('sup-risks');
   const risks=[];
-  OUTLETS.forEach(o=>{
+  getOutlets().forEach(o=>{
     const lastOrder=db.orders.filter(ord=>ord.outlet_id===o.id).sort((a,b)=>b.created_at.localeCompare(a.created_at))[0];
     const lastMerch=db.merch_reports.filter(m=>m.outlet_id===o.id).sort((a,b)=>b.created_at.localeCompare(a.created_at))[0];
     const failVisits=db.visits.filter(v=>v.outlet_id===o.id&&v.result==='failure');
@@ -1239,7 +1342,7 @@ function renderSupRisks() {
       ${risks.length===0?`
         <div class="card" style="margin-top:8px">
           <div style="font-size:9px;font-family:var(--mono);color:var(--text3);margin-bottom:8px">КОНТРОЛЬ ЗАДОЛЖЕННОСТЕЙ</div>
-          ${OUTLETS.filter(o=>o.debt>0).map(o=>`
+          ${getOutlets().filter(o=>o.debt>0).map(o=>`
             <div class="stat-row"><span class="stat-label">${o.name}</span><span class="stat-val" style="color:var(--red)">${o.debt.toLocaleString()} тг</span></div>`).join('')}
         </div>`:``}
     </div>`;
@@ -1415,10 +1518,12 @@ function renderOpPrices() {
     <div class="page-title">Редактор цен</div>
     <div class="section">
       <div class="alert alert-info"><span>ℹ</span><span>Изменения немедленно применяются для всех ТП при создании заказов</span></div>
-      ${PRODUCTS.map(p=>`
+      <button class="btn btn-primary btn-full" style="margin-bottom:10px" onclick="openProductCreate()">+ Добавить номенклатуру</button>
+      ${getProducts().map(p=>`
         <div class="card" style="margin-bottom:8px">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
             <div><div style="font-size:13px;font-weight:600">${p.name}</div><div style="font-size:10px;color:var(--text3);font-family:var(--mono)">${p.unit}</div></div>
+            <button class="btn btn-danger btn-sm" onclick="deleteProduct(${p.id})">Удалить</button>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr 90px;gap:8px;align-items:end">
             <div>
@@ -1429,14 +1534,51 @@ function renderOpPrices() {
               <div style="font-size:9px;font-family:var(--mono);color:var(--text3);margin-bottom:4px">ПРОМО (ТГ)</div>
               <input type="number" class="form-input" id="promo-${p.id}" placeholder="—" style="font-family:var(--mono);color:var(--yellow)" min="0">
             </div>
-            <button class="btn btn-ghost btn-sm" onclick="savePrice(${p.id},${p.name.replace(/'/g,'')})">Сохранить</button>
+            <button class="btn btn-ghost btn-sm" onclick="savePrice(${p.id})">Сохранить</button>
           </div>
         </div>`).join('')}
     </div>`;
 }
+function openProductCreate() {
+  document.getElementById('prod-name').value = '';
+  document.getElementById('prod-unit').value = 'шт';
+  document.getElementById('prod-cat').value = '';
+  document.getElementById('prod-sugg').value = '10';
+  document.getElementById('prod-price').value = '100';
+  om('modal-product-create');
+}
+function createProduct() {
+  const name = document.getElementById('prod-name').value.trim();
+  const unit = document.getElementById('prod-unit').value.trim() || 'шт';
+  const cat = document.getElementById('prod-cat').value.trim() || 'Прочее';
+  const sugg = parseInt(document.getElementById('prod-sugg').value||0);
+  const price = parseInt(document.getElementById('prod-price').value||0);
+  if (!name || price<=0) { toast('Укажите название и цену > 0','var(--yellow)'); return; }
+  const nextId = Math.max(0, ...getProducts().map(p=>Number(p.id)||0)) + 1;
+  db.products.push({id:nextId,name,unit,cat,sugg:Math.max(0,sugg)});
+  db.prices[nextId] = price;
+  db.warehouse[nextId] = {qty:0,reserved:0};
+  saveDB();
+  cm('modal-product-create');
+  renderOpPrices();
+  toast('✅ Номенклатура добавлена');
+}
+function deleteProduct(id) {
+  const p = getProducts().find(x=>x.id===id);
+  if (!p) return;
+  const usedInOrders = db.orders.some(o=>(o.items||[]).some(i=>i.product_id===id));
+  if (usedInOrders) { toast('Нельзя удалить: SKU есть в заказах','var(--yellow)'); return; }
+  db.products = db.products.filter(x=>x.id!==id);
+  delete db.prices[id];
+  delete db.warehouse[id];
+  saveDB();
+  renderOpPrices();
+  renderOpStock();
+  toast(`🗑️ Номенклатура удалена · ${p.name}`);
+}
 function savePrice(id) {
   const val=parseInt(document.getElementById(`pr-${id}`)?.value||0);
-  if (val>0) { db.prices[id]=val; saveDB(); toast(`✅ Цена обновлена · ${PRODUCTS.find(p=>p.id===id)?.name}`); }
+  if (val>0) { db.prices[id]=val; saveDB(); toast(`✅ Цена обновлена · ${getProducts().find(p=>p.id===id)?.name}`); }
 }
 
 // ═══════════════════════════════════════
@@ -1449,7 +1591,7 @@ function renderOpStock() {
     <div class="page-title">Складские остатки</div>
     <div class="section">
       ${low.length?`<div class="alert alert-danger"><span>⚠</span><span>${low.length} позиции ниже минимального уровня</span></div>`:''}
-      ${PRODUCTS.map(p=>{
+      ${getProducts().map(p=>{
         const w=db.warehouse[p.id]||{qty:500,reserved:100};
         const avail=w.qty-w.reserved;
         const isLow=avail<10;
@@ -1478,7 +1620,7 @@ function saveWarehouse(id) {
   const val=parseInt(document.getElementById(`wh-${id}`)?.value||0);
   if (!db.warehouse[id]) db.warehouse[id]={qty:0,reserved:0};
   db.warehouse[id].qty=val;
-  saveDB(); toast(`✅ Склад обновлён · ${PRODUCTS.find(p=>p.id===id)?.name}`);
+  saveDB(); toast(`✅ Склад обновлён · ${getProducts().find(p=>p.id===id)?.name}`);
   renderOpStock();
 }
 
