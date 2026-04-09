@@ -162,6 +162,7 @@ select.form-input option{background:var(--bg3)}
     <div class="login-help">
       Демо доступы: rep1/rep1pass, rep2/rep2pass, sup/sup123, op/op123
     </div>
+    <button class="btn btn-ghost btn-full" style="margin-top:10px" onclick="openSupabaseConfig()">☁️ Подключить Supabase</button>
   </div>
   <div style="font-size:10px;color:var(--text3);text-align:center;font-family:var(--mono)">Все данные хранятся локально в браузере</div>
 </div>
@@ -378,21 +379,121 @@ select.form-input option{background:var(--bg3)}
   </div>
 </div>
 
+<div id="modal-supabase" class="modal-overlay" onclick="cmi(event,'modal-supabase')">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Подключение Supabase</div>
+    <div class="modal-sub">Укажи URL проекта и anon key. После подключения все сохранения будут синхронизироваться в облако.</div>
+    <div class="form-group">
+      <label class="form-label">Project URL</label>
+      <input id="sb-url" class="form-input" placeholder="https://xxxx.supabase.co">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Anon key</label>
+      <textarea id="sb-key" class="form-input" rows="4" placeholder="eyJ..."></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Workspace key</label>
+      <input id="sb-workspace" class="form-input" value="default" placeholder="Напр. team-kz">
+    </div>
+    <div class="alert alert-warn"><span>⚠</span><span>Нужно создать таблицу <b>fieldos_state</b> с колонками: <b>id text primary key</b>, <b>state jsonb not null</b>, <b>updated_at timestamptz default now()</b>.</span></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <button class="btn btn-ghost btn-full" onclick="clearSupabaseConfig()">Отключить</button>
+      <button class="btn btn-primary btn-full" onclick="saveSupabaseConfig()">Сохранить и синхронизировать</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // ═══════════════════════════════════════
 // PERSISTENT STORAGE
 // ═══════════════════════════════════════
 const DB_KEY = 'fsos_db_v2';
+const SB_CFG_KEY = 'fsos_supabase_cfg_v1';
+const SB_TABLE = 'fieldos_state';
+let sbClient = null;
+let saveQueue = Promise.resolve();
+
+function getSupabaseConfig() {
+  try { return JSON.parse(localStorage.getItem(SB_CFG_KEY) || 'null'); }
+  catch { return null; }
+}
+function setSupabaseConfig(cfg) {
+  localStorage.setItem(SB_CFG_KEY, JSON.stringify(cfg));
+}
+function clearSupabaseConfigStorage() {
+  localStorage.removeItem(SB_CFG_KEY);
+  sbClient = null;
+}
+function isSupabaseReady() {
+  const cfg = getSupabaseConfig();
+  return !!(cfg?.url && cfg?.anonKey && window.supabase?.createClient);
+}
+function getSupabaseClient() {
+  if (sbClient) return sbClient;
+  const cfg = getSupabaseConfig();
+  if (!cfg?.url || !cfg?.anonKey || !window.supabase?.createClient) return null;
+  sbClient = window.supabase.createClient(cfg.url, cfg.anonKey);
+  return sbClient;
+}
+function workspaceStateKey() {
+  const cfg = getSupabaseConfig();
+  return cfg?.workspace?.trim() || 'default';
+}
 function loadDB() {
   try { return JSON.parse(localStorage.getItem(DB_KEY)) || initDB(); }
   catch { return initDB(); }
 }
 function saveDB() {
   localStorage.setItem(DB_KEY, JSON.stringify(db));
+  queueSupabaseSave();
   const ind = document.getElementById('save-ind');
   if (ind) { ind.classList.add('show'); setTimeout(()=>ind.classList.remove('show'),1500); }
+}
+async function loadDBFromSupabase() {
+  if (!isSupabaseReady()) return null;
+  const client = getSupabaseClient();
+  if (!client) return null;
+  const { data, error } = await client.from(SB_TABLE).select('state').eq('id', workspaceStateKey()).maybeSingle();
+  if (error) throw error;
+  return data?.state || null;
+}
+async function saveDBToSupabase(snapshot) {
+  if (!isSupabaseReady()) return;
+  const client = getSupabaseClient();
+  if (!client) return;
+  const payload = { id: workspaceStateKey(), state: snapshot, updated_at: new Date().toISOString() };
+  const { error } = await client.from(SB_TABLE).upsert(payload, { onConflict: 'id' });
+  if (error) throw error;
+}
+function queueSupabaseSave() {
+  if (!isSupabaseReady()) return;
+  const snap = JSON.parse(JSON.stringify(db));
+  saveQueue = saveQueue
+    .then(()=>saveDBToSupabase(snap))
+    .catch((err)=>console.warn('Supabase sync failed:', err?.message || err));
+}
+async function hydrateDBFromSupabase() {
+  if (!isSupabaseReady()) return;
+  try {
+    const remote = await loadDBFromSupabase();
+    if (remote) {
+      db = remote;
+      ensureDBSchema();
+      localStorage.setItem(DB_KEY, JSON.stringify(db));
+      if (curUser) renderCurrentScreen();
+      toast('☁️ Данные загружены из Supabase','var(--accent)');
+      return;
+    }
+    await saveDBToSupabase(db);
+    toast('☁️ Supabase инициализирован локальными данными','var(--accent)');
+  } catch (e) {
+    console.warn(e);
+    toast('⚠️ Не удалось синхронизироваться с Supabase','var(--yellow)');
+  }
 }
 function initDB() {
   return {
@@ -535,6 +636,7 @@ function bootApp() {
   syncTaskOutletOptions();
   renderNav();
   renderCurrentScreen();
+  hydrateDBFromSupabase();
 }
 
 // ═══════════════════════════════════════
@@ -600,6 +702,29 @@ function toast(msg, color='var(--green)') {
   const t=document.getElementById('toast');
   t.textContent=msg; t.style.borderColor=color; t.style.color=color;
   t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2800);
+}
+function openSupabaseConfig() {
+  const cfg = getSupabaseConfig() || {};
+  document.getElementById('sb-url').value = cfg.url || '';
+  document.getElementById('sb-key').value = cfg.anonKey || '';
+  document.getElementById('sb-workspace').value = cfg.workspace || 'default';
+  om('modal-supabase');
+}
+async function saveSupabaseConfig() {
+  const url = document.getElementById('sb-url').value.trim();
+  const anonKey = document.getElementById('sb-key').value.trim();
+  const workspace = document.getElementById('sb-workspace').value.trim() || 'default';
+  if (!url || !anonKey) { toast('Укажи URL и anon key','var(--yellow)'); return; }
+  setSupabaseConfig({ url, anonKey, workspace });
+  sbClient = null;
+  cm('modal-supabase');
+  await hydrateDBFromSupabase();
+  saveDB();
+}
+function clearSupabaseConfig() {
+  clearSupabaseConfigStorage();
+  cm('modal-supabase');
+  toast('☁️ Supabase отключен. Остаёмся на localStorage','var(--yellow)');
 }
 
 // ═══════════════════════════════════════
