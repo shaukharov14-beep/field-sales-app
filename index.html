@@ -337,6 +337,16 @@ select.form-input option{background:var(--bg3)}
       <input class="form-input" id="outlet-contact" placeholder="Имя · +7 ...">
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div class="form-group">
+        <label class="form-label">Широта (опц.)</label>
+        <input class="form-input" id="outlet-lat" placeholder="43.2389">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Долгота (опц.)</label>
+        <input class="form-input" id="outlet-lon" placeholder="76.8897">
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
       <button class="btn btn-ghost btn-full" onclick="cm('modal-outlet-create')">Отмена</button>
       <button class="btn btn-primary btn-full" onclick="createOutlet()">Создать</button>
     </div>
@@ -562,6 +572,18 @@ const MERCH_ITEMS = [
 function ensureDBSchema() {
   if (!Array.isArray(db.outlets) || db.outlets.length===0) db.outlets = DEFAULT_OUTLETS.map(o=>({...o}));
   if (!Array.isArray(db.products) || db.products.length===0) db.products = DEFAULT_PRODUCTS.map(p=>({...p}));
+  db.outlets = db.outlets.map(o=>({
+    ...o,
+    lat:Number.isFinite(Number(o.lat)) ? Number(o.lat) : null,
+    lon:Number.isFinite(Number(o.lon)) ? Number(o.lon) : null
+  }));
+  if (!Array.isArray(db.visits)) db.visits = [];
+  db.visits = db.visits.map(v=>({
+    ...v,
+    checkin_geo:v.checkin_geo || null,
+    checkout_geo:v.checkout_geo || null,
+    geo_status:v.geo_status || 'missing'
+  }));
 }
 function getOutlets() { return db.outlets || []; }
 function getProducts() { return db.products || []; }
@@ -754,6 +776,93 @@ function syncTaskOutletOptions() {
   if (!taskOutlet) return;
   taskOutlet.innerHTML = getOutlets().map(o=>`<option>${o.name}</option>`).join('');
 }
+function parseCoord(value) {
+  const normalized = String(value ?? '').trim().replace(',', '.');
+  if (!normalized) return null;
+  const num = Number(normalized);
+  return Number.isFinite(num) ? num : null;
+}
+function toRad(v) { return v * Math.PI / 180; }
+function distanceMeters(lat1, lon1, lat2, lon2) {
+  const R = 6371000;
+  const dLat = toRad(lat2-lat1);
+  const dLon = toRad(lon2-lon1);
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+  return Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
+}
+async function readGeoPermissionState() {
+  if (!navigator.permissions?.query) return 'unknown';
+  try {
+    const res = await navigator.permissions.query({name:'geolocation'});
+    return res?.state || 'unknown';
+  } catch {
+    return 'unknown';
+  }
+}
+function getCurrentPositionAsync(options) {
+  return new Promise((resolve, reject) => {
+    navigator.geolocation.getCurrentPosition(resolve, reject, options);
+  });
+}
+function geoQualityByAccuracy(accuracy) {
+  if (!Number.isFinite(accuracy)) return 'unknown';
+  if (accuracy <= 50) return 'good';
+  if (accuracy <= 150) return 'medium';
+  return 'low';
+}
+async function captureGeoPoint({highAccuracy=false, timeout=8000, maximumAge=0}={}) {
+  if (!navigator.geolocation) return {ok:false, reason:'unsupported', permission:'unsupported'};
+  const permission = await readGeoPermissionState();
+  try {
+    const pos = await getCurrentPositionAsync({enableHighAccuracy:highAccuracy, timeout, maximumAge});
+    return {
+      ok:true,
+      permission,
+      source:highAccuracy?'gps_high':'gps',
+      captured_at:new Date().toISOString(),
+      lat:Number(pos.coords.latitude.toFixed(6)),
+      lon:Number(pos.coords.longitude.toFixed(6)),
+      accuracy:Math.round(pos.coords.accuracy || 0),
+      speed:Number.isFinite(pos.coords.speed) ? Math.round(pos.coords.speed*100)/100 : null,
+      heading:Number.isFinite(pos.coords.heading) ? Math.round(pos.coords.heading) : null,
+      mocked:pos.coords?.mocked===true
+    };
+  } catch (e) {
+    const code = e?.code;
+    const reason = code===1?'denied':code===2?'unavailable':code===3?'timeout':'error';
+    return {ok:false, reason, permission};
+  }
+}
+async function captureVisitGeo(outlet) {
+  const first = await captureGeoPoint({highAccuracy:false, timeout:7000, maximumAge:30000});
+  let best = first;
+  const shouldRetry = !first.ok || !Number.isFinite(first.accuracy) || first.accuracy > 80;
+  if (shouldRetry) {
+    const second = await captureGeoPoint({highAccuracy:true, timeout:15000, maximumAge:0});
+    if (second.ok && (!best.ok || (second.accuracy||99999) < (best.accuracy||99999))) best = second;
+  }
+  const quality = best.ok ? geoQualityByAccuracy(best.accuracy) : 'missing';
+  const hasOutletCoords = Number.isFinite(outlet?.lat) && Number.isFinite(outlet?.lon);
+  const distance = best.ok && hasOutletCoords ? distanceMeters(best.lat, best.lon, outlet.lat, outlet.lon) : null;
+  const inside = Number.isFinite(distance) ? distance <= 200 : null;
+  return {
+    ...best,
+    quality,
+    outlet_distance_m:distance,
+    within_radius:inside,
+    required_radius_m:hasOutletCoords ? 200 : null,
+    status:!best.ok ? 'missing' : (inside===false ? 'outside_radius' : quality==='low' ? 'weak_signal' : 'verified')
+  };
+}
+function summarizeVisitGeoStatus(checkinGeo, checkoutGeo) {
+  const statuses = [checkinGeo?.status, checkoutGeo?.status].filter(Boolean);
+  if (statuses.includes('outside_radius')) return 'outside_radius';
+  if (statuses.includes('weak_signal')) return 'weak_signal';
+  if (statuses.includes('verified')) return 'verified';
+  return statuses[0] || 'missing';
+}
 
 // ═══════════════════════════════════════
 // REP — TODAY
@@ -892,18 +1001,24 @@ function openOutletCreate() {
   document.getElementById('outlet-name').value = '';
   document.getElementById('outlet-addr').value = '';
   document.getElementById('outlet-contact').value = '';
+  document.getElementById('outlet-lat').value = '';
+  document.getElementById('outlet-lon').value = '';
   om('modal-outlet-create');
 }
 function createOutlet() {
   const name = document.getElementById('outlet-name').value.trim();
   const addr = document.getElementById('outlet-addr').value.trim();
   const contact = document.getElementById('outlet-contact').value.trim();
+  const lat = parseCoord(document.getElementById('outlet-lat').value);
+  const lon = parseCoord(document.getElementById('outlet-lon').value);
   if (!name || !addr) { toast('Заполните название и адрес','var(--yellow)'); return; }
+  if ((lat===null)!==(lon===null)) { toast('Укажите и широту, и долготу','var(--yellow)'); return; }
   const nextId = Math.max(0, ...getOutlets().map(o=>Number(o.id)||0)) + 1;
   db.outlets.push({
     id:nextId, name, addr, contact:contact||'Контакт не указан',
     type:'Минимаркет', channel:'C', priority:'medium', debt:0,
-    ai:'Новая точка — выполните первый визит', ait:'blue'
+    ai:'Новая точка — выполните первый визит', ait:'blue',
+    lat, lon
   });
   saveDB();
   syncTaskOutletOptions();
@@ -962,6 +1077,11 @@ function renderOutlet() {
         <div class="ai-label">⚡ AI-рекомендация</div>
         <div class="ai-text">${o.ai}. Проверьте молочную полку и сроки годности. Предложите промо на вафли.</div>
       </div>
+      <div class="card" style="margin-bottom:10px">
+        <div style="font-size:9px;font-family:var(--mono);color:var(--text3);margin-bottom:6px;padding-bottom:5px;border-bottom:1px solid var(--border)">GEO-КОНТРОЛЬ ВИЗИТА</div>
+        <div class="stat-row"><span class="stat-label">Чек-ин</span><span class="stat-val">${v?.checkin_geo?.ok?`${v.checkin_geo.lat}, ${v.checkin_geo.lon} · ±${v.checkin_geo.accuracy||'—'}м`:'—'}</span></div>
+        <div class="stat-row"><span class="stat-label">Статус</span><span class="stat-val">${v?.geo_status==='verified'?'✅ Подтверждено':v?.geo_status==='outside_radius'?'⚠ Вне радиуса':v?.geo_status==='weak_signal'?'⚠ Слабый сигнал':'—'}</span></div>
+      </div>
       <div style="display:flex;flex-direction:column;gap:8px">
         <button class="btn btn-primary btn-full" onclick="doCheckin()" ${status!=='pending'?'disabled style="opacity:.45"':''}>
           📍 ${status==='pending'?'Чек-ин — Начать визит':status==='active'?'✓ Визит начат':'✓ Визит завершён'}
@@ -978,20 +1098,28 @@ function renderOutlet() {
     </div>`;
 }
 
-function doCheckin() {
+async function doCheckin() {
   if (!curOutlet) return;
   const existing = getOutletVisit(curOutlet.id, curUser.id);
   if (existing) { toast('Визит уже начат','var(--yellow)'); return; }
+  const geo = await captureVisitGeo(curOutlet);
   const visitId = uid();
   db.visits.push({
     id:visitId, outlet_id:curOutlet.id, rep_id:curUser.id,
     rep_name:curUser.name, outlet_name:curOutlet.name,
     date:today(), status:'active', checkin_time:now(),
-    result:null, failure_reason:null, notes:'', order_total:null
+    result:null, failure_reason:null, notes:'', order_total:null,
+    checkin_geo:geo, checkout_geo:null, geo_status:geo.status
   });
   curVisitId = visitId;
   saveDB();
-  toast('✅ Чек-ин выполнен · Время зафиксировано');
+  if (geo.ok) {
+    const distLabel = Number.isFinite(geo.outlet_distance_m) ? ` · ${geo.outlet_distance_m}м до точки` : '';
+    const qualityLabel = geo.quality==='good'?'GPS ok':geo.quality==='medium'?'GPS средний':'GPS слабый';
+    toast(`✅ Чек-ин выполнен · ${qualityLabel}${distLabel}`);
+  } else {
+    toast('✅ Чек-ин выполнен · гео не получена','var(--yellow)');
+  }
   renderOutlet();
 }
 
@@ -1184,13 +1312,22 @@ function selReason(btn) {
   document.querySelectorAll('#fin-reasons .reason-btn').forEach(b=>b.classList.remove('selected'));
   btn.classList.add('selected'); finReason=btn.textContent.trim();
 }
-function submitFinish() {
+async function submitFinish() {
   if (!finResult) { toast('Выберите результат визита','var(--yellow)'); return; }
   const notes=document.getElementById('fin-notes').value;
   const coins=finResult==='success'?160:40;
+  const checkoutGeo = await captureVisitGeo(curOutlet);
   if (curVisitId) {
     const v=db.visits.find(x=>x.id===curVisitId);
-    if (v) { v.status='done'; v.result=finResult; v.failure_reason=finReason; v.notes=notes; v.checkout_time=now(); }
+    if (v) {
+      v.status='done';
+      v.result=finResult;
+      v.failure_reason=finReason;
+      v.notes=notes;
+      v.checkout_time=now();
+      v.checkout_geo=checkoutGeo;
+      v.geo_status=summarizeVisitGeoStatus(v.checkin_geo, checkoutGeo);
+    }
   }
   addCoins(curUser.id,coins,finResult==='success'?'Успешный визит':'Завершение визита');
   const pending=getOutlets().filter(o=>!getOutletVisit(o.id,curUser.id));
