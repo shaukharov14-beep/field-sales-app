@@ -357,7 +357,7 @@ select.form-input option{background:var(--bg3)}
   <div class="modal">
     <div class="modal-handle"></div>
     <div class="modal-title">Новая номенклатура</div>
-    <div class="modal-sub">Добавление SKU в каталог оператора</div>
+    <div class="modal-sub">Добавление SKU в раздел «Справочник → Товары»</div>
     <div class="form-group">
       <label class="form-label">Название</label>
       <input class="form-input" id="prod-name" placeholder="Например: Вода 1л">
@@ -378,13 +378,51 @@ select.form-input option{background:var(--bg3)}
         <input type="number" class="form-input" id="prod-sugg" value="10" min="0">
       </div>
       <div class="form-group">
-        <label class="form-label">Цена (тг)</label>
-        <input type="number" class="form-input" id="prod-price" value="100" min="0">
+        <label class="form-label">Цена · Базовый (тг)</label>
+        <input type="number" class="form-input" id="prod-price-base" value="100" min="0">
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div class="form-group">
+        <label class="form-label">Цена · Опт (тг)</label>
+        <input type="number" class="form-input" id="prod-price-wholesale" value="95" min="0">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Цена · VIP (тг)</label>
+        <input type="number" class="form-input" id="prod-price-vip" value="90" min="0">
       </div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
       <button class="btn btn-ghost btn-full" onclick="cm('modal-product-create')">Отмена</button>
       <button class="btn btn-primary btn-full" onclick="createProduct()">Добавить</button>
+    </div>
+  </div>
+</div>
+
+<div id="modal-client-create" class="modal-overlay" onclick="cmi(event,'modal-client-create')">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Новый клиент</div>
+    <div class="modal-sub">Добавление клиента в раздел «Справочник → Клиенты»</div>
+    <div class="form-group">
+      <label class="form-label">Название клиента</label>
+      <input class="form-input" id="client-name" placeholder="Например: Асар маркет">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Адрес</label>
+      <input class="form-input" id="client-addr" placeholder="ул. ..., дом ...">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Контакт</label>
+      <input class="form-input" id="client-contact" placeholder="Имя · +7 ...">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Тип цены</label>
+      <select class="form-input" id="client-price-type"></select>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <button class="btn btn-ghost btn-full" onclick="cm('modal-client-create')">Отмена</button>
+      <button class="btn btn-primary btn-full" onclick="createClient()">Создать</button>
     </div>
   </div>
 </div>
@@ -426,6 +464,11 @@ const SB_CFG_KEY = 'fsos_supabase_cfg_v1';
 const SB_TABLE = 'fieldos_state';
 let sbClient = null;
 let saveQueue = Promise.resolve();
+const DEFAULT_PRICE_TYPES = [
+  {id:'base',name:'Базовый'},
+  {id:'wholesale',name:'Опт'},
+  {id:'vip',name:'VIP'},
+];
 
 function getSupabaseConfig() {
   try { return JSON.parse(localStorage.getItem(SB_CFG_KEY) || 'null'); }
@@ -506,14 +549,18 @@ async function hydrateDBFromSupabase() {
   }
 }
 function initDB() {
+  const prices = { 1:180,2:420,3:320,4:680,5:390,6:1250,7:890,8:1100 };
   return {
     visits: [], orders: [], stock_entries: [], merch_reports: [],
     tasks: [], coins: {},
     outlets: [],
     products: [],
-    prices: {
-      1:180,2:420,3:320,4:680,5:390,6:1250,7:890,8:1100
-    },
+    prices,
+    price_types: DEFAULT_PRICE_TYPES.map(t=>({...t})),
+    product_prices: Object.fromEntries(Object.entries(prices).map(([id,price])=>[
+      id,
+      { base:price, wholesale:Math.max(1, Math.round(price*0.95)), vip:Math.max(1, Math.round(price*0.9)) }
+    ])),
     warehouse: {
       1:{qty:2400,reserved:380},2:{qty:180,reserved:120},
       3:{qty:960,reserved:200},4:{qty:840,reserved:340},
@@ -574,9 +621,24 @@ function ensureDBSchema() {
   if (!Array.isArray(db.products) || db.products.length===0) db.products = DEFAULT_PRODUCTS.map(p=>({...p}));
   db.outlets = db.outlets.map(o=>({
     ...o,
+    price_type:o.price_type || 'base',
     lat:Number.isFinite(Number(o.lat)) ? Number(o.lat) : null,
     lon:Number.isFinite(Number(o.lon)) ? Number(o.lon) : null
   }));
+  if (!Array.isArray(db.price_types) || db.price_types.length===0) db.price_types = DEFAULT_PRICE_TYPES.map(t=>({...t}));
+  if (!db.product_prices || typeof db.product_prices!=='object') db.product_prices = {};
+  getProducts().forEach(p=>{
+    const legacy = Number(db.prices?.[p.id]) || 0;
+    const current = db.product_prices[p.id] || {};
+    const base = Number(current.base) || legacy || 180;
+    db.product_prices[p.id] = {
+      base,
+      wholesale:Number(current.wholesale) || Math.max(1, Math.round(base*0.95)),
+      vip:Number(current.vip) || Math.max(1, Math.round(base*0.9)),
+    };
+    if (!db.prices) db.prices = {};
+    db.prices[p.id] = base;
+  });
   if (!Array.isArray(db.visits)) db.visits = [];
   db.visits = db.visits.map(v=>({
     ...v,
@@ -587,6 +649,16 @@ function ensureDBSchema() {
 }
 function getOutlets() { return db.outlets || []; }
 function getProducts() { return db.products || []; }
+function getPriceTypes() { return db.price_types || DEFAULT_PRICE_TYPES; }
+function getPriceTypeName(typeId) { return getPriceTypes().find(t=>t.id===typeId)?.name || 'Базовый'; }
+function getPriceTypeForOutlet(outlet) { return outlet?.price_type || 'base'; }
+function getPrice(productId, outlet=curOutlet) {
+  const p = db.product_prices?.[productId];
+  const typeId = getPriceTypeForOutlet(outlet);
+  if (p && Number(p[typeId])>0) return Number(p[typeId]);
+  if (p && Number(p.base)>0) return Number(p.base);
+  return Number(db.prices?.[productId]) || getProducts().find(x=>x.id===productId)?.sugg || 0;
+}
 ensureDBSchema();
 saveDB();
 
@@ -680,7 +752,7 @@ const NAV = {
   operator:[
     {id:'op-panel',label:'Панель',s:'<path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>'},
     {id:'op-orders',label:'Заказы',s:'<path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>'},
-    {id:'op-prices',label:'Цены',s:'<path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>'},
+    {id:'op-prices',label:'Справочник',s:'<path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>'},
     {id:'op-stock',label:'Склад',s:'<path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>'},
   ],
 };
@@ -770,7 +842,6 @@ function getTodayVisits(userId) {
 function getOutletVisit(outletId, userId) {
   return db.visits.find(v=>v.outlet_id===outletId && v.rep_id===userId && v.date===today());
 }
-function getPrice(productId) { return db.prices[productId] || getProducts().find(p=>p.id===productId)?.sugg||0; }
 function syncTaskOutletOptions() {
   const taskOutlet = document.getElementById('task-outlet');
   if (!taskOutlet) return;
@@ -1191,7 +1262,7 @@ function openOrder() {
 function renderOrder() {
   const el = document.getElementById('rep-order');
   if (orderSubmitted) {
-    const total = getProducts().reduce((s,p)=>s+(db.prices[p.id]||p.sugg)*(orderQtys[p.id]||0),0);
+    const total = getProducts().reduce((s,p)=>s+getPrice(p.id)*(orderQtys[p.id]||0),0);
     el.innerHTML = `
       <div class="detail-header">
         <div class="back-btn" onclick="nav('rep-outlet')"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg></div>
@@ -1212,13 +1283,14 @@ function renderOrder() {
       </div>`;
     return;
   }
-  const total = getProducts().reduce((s,p)=>s+(db.prices[p.id]||180)*(orderQtys[p.id]||0),0);
+  const total = getProducts().reduce((s,p)=>s+getPrice(p.id)*(orderQtys[p.id]||0),0);
   el.innerHTML = `
     <div class="detail-header">
       <div class="back-btn" onclick="nav('rep-outlet')"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg></div>
       <div><div style="font-weight:700;font-size:14px">Создание заказа</div><div style="font-size:11px;color:var(--text3);font-family:var(--mono)">${curOutlet?.name||'—'}</div></div>
     </div>
     <div class="section">
+      <div class="alert alert-info"><span>🏷️</span><span>Тип цены клиента: <b>${getPriceTypeName(getPriceTypeForOutlet(curOutlet))}</b></span></div>
       <div class="ai-block">
         <div class="ai-label">⚡ Рекомендованный заказ</div>
         <div class="ai-text">По истории: молоко ×20, вафли ×15. Нажмите «Авто-заказ» для заполнения.</div>
@@ -1227,7 +1299,7 @@ function renderOrder() {
         <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
           <div style="flex:1;min-width:0;margin-right:8px">
             <div style="font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name}</div>
-            <div style="font-size:10px;color:var(--text3);font-family:var(--mono)">${db.prices[p.id]||180} тг/${p.unit}</div>
+            <div style="font-size:10px;color:var(--text3);font-family:var(--mono)">${getPrice(p.id).toLocaleString()} тг/${p.unit}</div>
           </div>
           <div class="qty-ctrl">
             <button class="qty-btn" onclick="chQty(${p.id},-1)">−</button>
@@ -1250,7 +1322,7 @@ function renderOrder() {
 function chQty(id, d) {
   orderQtys[id]=Math.max(0,(orderQtys[id]||0)+d);
   document.getElementById(`q${id}`).textContent=orderQtys[id];
-  const total=getProducts().reduce((s,p)=>s+(db.prices[p.id]||180)*(orderQtys[p.id]||0),0);
+  const total=getProducts().reduce((s,p)=>s+getPrice(p.id)*(orderQtys[p.id]||0),0);
   const el=document.getElementById('ord-total'); if(el) el.textContent=total.toLocaleString()+' тг';
 }
 function autoOrder() {
@@ -1258,7 +1330,7 @@ function autoOrder() {
   renderOrder(); toast('⚡ Рекомендованные количества применены');
 }
 function openOrderConfirm() {
-  const total=getProducts().reduce((s,p)=>s+(db.prices[p.id]||180)*(orderQtys[p.id]||0),0);
+  const total=getProducts().reduce((s,p)=>s+getPrice(p.id)*(orderQtys[p.id]||0),0);
   const items=getProducts().filter(p=>orderQtys[p.id]>0).length;
   if (!items) { toast('Добавьте товары в заказ','var(--yellow)'); return; }
   document.getElementById('ord-confirm-info').textContent=`${curOutlet?.name} · ${items} позиций · ${total.toLocaleString()} тг`;
@@ -1267,8 +1339,8 @@ function openOrderConfirm() {
 }
 function confirmOrder() {
   if (!curOutlet) return;
-  const total=getProducts().reduce((s,p)=>s+(db.prices[p.id]||180)*(orderQtys[p.id]||0),0);
-  const items=getProducts().filter(p=>orderQtys[p.id]>0).map(p=>({product_id:p.id,name:p.name,unit:p.unit,qty:orderQtys[p.id],price:db.prices[p.id]||180}));
+  const total=getProducts().reduce((s,p)=>s+getPrice(p.id)*(orderQtys[p.id]||0),0);
+  const items=getProducts().filter(p=>orderQtys[p.id]>0).map(p=>({product_id:p.id,name:p.name,unit:p.unit,qty:orderQtys[p.id],price:getPrice(p.id)}));
   const comment=document.getElementById('ord-comment').value;
   const orderId=uid();
   db.orders.push({
@@ -1706,7 +1778,7 @@ function renderOpPanel() {
       </div>
       ${[
         {icon:'📦',label:'Подтвердить заказы',sub:`${newOrders.length} новых заказов от ТП`,action:"nav('op-orders')"},
-        {icon:'🏷️',label:'Корректировка цен',sub:'Обновить базовые и промо-цены',action:"nav('op-prices')"},
+        {icon:'🏷️',label:'Справочник',sub:'Клиенты, товары и типы цен',action:"nav('op-prices')"},
         {icon:'🏭',label:'Остатки склада',sub:'Контроль и корректировка',action:"nav('op-stock')"},
         {icon:'📄',label:'Отгрузочные документы',sub:'Формирование для подтверждённых',action:"generateDocs()"},
       ].map(a=>`
@@ -1795,37 +1867,136 @@ function printOrder(id) {
 // ═══════════════════════════════════════
 function renderOpPrices() {
   const el=document.getElementById('op-prices');
+  const types = getPriceTypes();
   el.innerHTML=`
-    <div class="page-title">Редактор цен</div>
+    <div class="page-title">Справочник</div>
     <div class="section">
-      <div class="alert alert-info"><span>ℹ</span><span>Изменения немедленно применяются для всех ТП при создании заказов</span></div>
-      <button class="btn btn-primary btn-full" style="margin-bottom:10px" onclick="openProductCreate()">+ Добавить номенклатуру</button>
-      ${getProducts().map(p=>`
+      <div class="tabs" style="padding:0;margin:0 0 10px;border:none">
+        <div class="tab active" id="ref-tab-clients" onclick="switchRefTab('clients')">Клиенты</div>
+        <div class="tab" id="ref-tab-products" onclick="switchRefTab('products')">Товары</div>
+      </div>
+      <div id="ref-clients">
+        <div class="alert alert-info"><span>ℹ</span><span>Для каждого клиента можно назначить тип цены. ТП будут видеть стоимость согласно типу клиента.</span></div>
+        <button class="btn btn-primary btn-full" style="margin-bottom:10px" onclick="openClientCreate()">+ Добавить клиента</button>
+        ${getOutlets().map(c=>`
+          <div class="card" style="margin-bottom:8px">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+              <div>
+                <div style="font-size:9px;font-family:var(--mono);color:var(--text3);margin-bottom:4px">НАЗВАНИЕ</div>
+                <input class="form-input" id="cl-name-${c.id}" value="${c.name||''}">
+              </div>
+              <div>
+                <div style="font-size:9px;font-family:var(--mono);color:var(--text3);margin-bottom:4px">КОНТАКТ</div>
+                <input class="form-input" id="cl-contact-${c.id}" value="${c.contact||''}">
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 100px;gap:8px;margin-top:8px;align-items:end">
+              <div>
+                <div style="font-size:9px;font-family:var(--mono);color:var(--text3);margin-bottom:4px">АДРЕС</div>
+                <input class="form-input" id="cl-addr-${c.id}" value="${c.addr||''}">
+              </div>
+              <div>
+                <div style="font-size:9px;font-family:var(--mono);color:var(--text3);margin-bottom:4px">ТИП ЦЕНЫ</div>
+                <select class="form-input" id="cl-price-type-${c.id}">
+                  ${types.map(t=>`<option value="${t.id}" ${getPriceTypeForOutlet(c)===t.id?'selected':''}>${t.name}</option>`).join('')}
+                </select>
+              </div>
+              <button class="btn btn-ghost btn-sm" onclick="saveClient(${c.id})">Сохранить</button>
+            </div>
+          </div>`).join('')}
+      </div>
+      <div id="ref-products" style="display:none">
+        <div class="alert alert-info"><span>ℹ</span><span>Укажи цены по каждому типу. Изменения сразу применяются в заказах ТП.</span></div>
+        <button class="btn btn-primary btn-full" style="margin-bottom:10px" onclick="openProductCreate()">+ Добавить товар</button>
+        ${getProducts().map(p=>`
         <div class="card" style="margin-bottom:8px">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-            <div><div style="font-size:13px;font-weight:600">${p.name}</div><div style="font-size:10px;color:var(--text3);font-family:var(--mono)">${p.unit}</div></div>
+            <div><div style="font-size:13px;font-weight:600">${p.name}</div><div style="font-size:10px;color:var(--text3);font-family:var(--mono)">${p.unit} · ${p.cat||'Прочее'}</div></div>
             <button class="btn btn-danger btn-sm" onclick="deleteProduct(${p.id})">Удалить</button>
           </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr 90px;gap:8px;align-items:end">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:end;margin-bottom:8px">
             <div>
-              <div style="font-size:9px;font-family:var(--mono);color:var(--text3);margin-bottom:4px">ЦЕНА (ТГ)</div>
-              <input type="number" class="form-input" id="pr-${p.id}" value="${db.prices[p.id]||180}" style="font-family:var(--mono)" min="0">
+              <div style="font-size:9px;font-family:var(--mono);color:var(--text3);margin-bottom:4px">НАЗВАНИЕ</div>
+              <input class="form-input" id="pr-name-${p.id}" value="${p.name}">
             </div>
             <div>
-              <div style="font-size:9px;font-family:var(--mono);color:var(--text3);margin-bottom:4px">ПРОМО (ТГ)</div>
-              <input type="number" class="form-input" id="promo-${p.id}" placeholder="—" style="font-family:var(--mono);color:var(--yellow)" min="0">
+              <div style="font-size:9px;font-family:var(--mono);color:var(--text3);margin-bottom:4px">ЕДИНИЦА</div>
+              <input class="form-input" id="pr-unit-${p.id}" value="${p.unit}">
             </div>
-            <button class="btn btn-ghost btn-sm" onclick="savePrice(${p.id})">Сохранить</button>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:end;margin-bottom:8px">
+            <div>
+              <div style="font-size:9px;font-family:var(--mono);color:var(--text3);margin-bottom:4px">КАТЕГОРИЯ</div>
+              <input class="form-input" id="pr-cat-${p.id}" value="${p.cat||''}">
+            </div>
+            <div>
+              <div style="font-size:9px;font-family:var(--mono);color:var(--text3);margin-bottom:4px">РЕКОМЕНД. КОЛ-ВО</div>
+              <input type="number" class="form-input" id="pr-sugg-${p.id}" value="${p.sugg||0}" min="0" style="font-family:var(--mono)">
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr 90px;gap:8px;align-items:end">
+            ${types.map(t=>`
+              <div>
+                <div style="font-size:9px;font-family:var(--mono);color:var(--text3);margin-bottom:4px">ЦЕНА · ${t.name.toUpperCase()}</div>
+                <input type="number" class="form-input" id="pr-${t.id}-${p.id}" value="${db.product_prices?.[p.id]?.[t.id]||0}" min="0" style="font-family:var(--mono)">
+              </div>
+            `).join('')}
+            <button class="btn btn-ghost btn-sm" onclick="saveProduct(${p.id})">Сохранить</button>
           </div>
         </div>`).join('')}
+      </div>
     </div>`;
+}
+function switchRefTab(tab) {
+  const isClients = tab==='clients';
+  document.getElementById('ref-clients').style.display = isClients ? '' : 'none';
+  document.getElementById('ref-products').style.display = isClients ? 'none' : '';
+  document.getElementById('ref-tab-clients').classList.toggle('active', isClients);
+  document.getElementById('ref-tab-products').classList.toggle('active', !isClients);
+}
+function openClientCreate() {
+  document.getElementById('client-name').value = '';
+  document.getElementById('client-addr').value = '';
+  document.getElementById('client-contact').value = '';
+  document.getElementById('client-price-type').innerHTML = getPriceTypes().map(t=>`<option value="${t.id}">${t.name}</option>`).join('');
+  om('modal-client-create');
+}
+function createClient() {
+  const name = document.getElementById('client-name').value.trim();
+  const addr = document.getElementById('client-addr').value.trim();
+  const contact = document.getElementById('client-contact').value.trim();
+  const price_type = document.getElementById('client-price-type').value || 'base';
+  if (!name || !addr) { toast('Укажите минимум название и адрес','var(--yellow)'); return; }
+  const nextId = Math.max(0, ...getOutlets().map(o=>Number(o.id)||0)) + 1;
+  db.outlets.push({
+    id:nextId,name,addr,contact:contact||'—',type:'Клиент',channel:'C',priority:'medium',debt:0,ai:'Новый клиент',ait:'blue',price_type,
+    lat:null,lon:null
+  });
+  saveDB();
+  syncTaskOutletOptions();
+  cm('modal-client-create');
+  renderOpPrices();
+  toast('✅ Клиент добавлен');
+}
+function saveClient(id) {
+  const c = getOutlets().find(x=>x.id===id);
+  if (!c) return;
+  c.name = document.getElementById(`cl-name-${id}`)?.value.trim() || c.name;
+  c.addr = document.getElementById(`cl-addr-${id}`)?.value.trim() || c.addr;
+  c.contact = document.getElementById(`cl-contact-${id}`)?.value.trim() || c.contact;
+  c.price_type = document.getElementById(`cl-price-type-${id}`)?.value || 'base';
+  saveDB();
+  syncTaskOutletOptions();
+  toast(`✅ Клиент обновлён · ${c.name}`);
 }
 function openProductCreate() {
   document.getElementById('prod-name').value = '';
   document.getElementById('prod-unit').value = 'шт';
   document.getElementById('prod-cat').value = '';
   document.getElementById('prod-sugg').value = '10';
-  document.getElementById('prod-price').value = '100';
+  document.getElementById('prod-price-base').value = '100';
+  document.getElementById('prod-price-wholesale').value = '95';
+  document.getElementById('prod-price-vip').value = '90';
   om('modal-product-create');
 }
 function createProduct() {
@@ -1833,16 +2004,19 @@ function createProduct() {
   const unit = document.getElementById('prod-unit').value.trim() || 'шт';
   const cat = document.getElementById('prod-cat').value.trim() || 'Прочее';
   const sugg = parseInt(document.getElementById('prod-sugg').value||0);
-  const price = parseInt(document.getElementById('prod-price').value||0);
-  if (!name || price<=0) { toast('Укажите название и цену > 0','var(--yellow)'); return; }
+  const priceBase = parseInt(document.getElementById('prod-price-base').value||0);
+  const priceWholesale = parseInt(document.getElementById('prod-price-wholesale').value||0);
+  const priceVip = parseInt(document.getElementById('prod-price-vip').value||0);
+  if (!name || priceBase<=0 || priceWholesale<=0 || priceVip<=0) { toast('Укажите название и все цены > 0','var(--yellow)'); return; }
   const nextId = Math.max(0, ...getProducts().map(p=>Number(p.id)||0)) + 1;
   db.products.push({id:nextId,name,unit,cat,sugg:Math.max(0,sugg)});
-  db.prices[nextId] = price;
+  db.product_prices[nextId] = {base:priceBase, wholesale:priceWholesale, vip:priceVip};
+  db.prices[nextId] = priceBase;
   db.warehouse[nextId] = {qty:0,reserved:0};
   saveDB();
   cm('modal-product-create');
   renderOpPrices();
-  toast('✅ Номенклатура добавлена');
+  toast('✅ Товар добавлен');
 }
 function deleteProduct(id) {
   const p = getProducts().find(x=>x.id===id);
@@ -1851,15 +2025,30 @@ function deleteProduct(id) {
   if (usedInOrders) { toast('Нельзя удалить: SKU есть в заказах','var(--yellow)'); return; }
   db.products = db.products.filter(x=>x.id!==id);
   delete db.prices[id];
+  delete db.product_prices[id];
   delete db.warehouse[id];
   saveDB();
   renderOpPrices();
   renderOpStock();
-  toast(`🗑️ Номенклатура удалена · ${p.name}`);
+  toast(`🗑️ Товар удалён · ${p.name}`);
 }
-function savePrice(id) {
-  const val=parseInt(document.getElementById(`pr-${id}`)?.value||0);
-  if (val>0) { db.prices[id]=val; saveDB(); toast(`✅ Цена обновлена · ${getProducts().find(p=>p.id===id)?.name}`); }
+function saveProduct(id) {
+  const p = getProducts().find(x=>x.id===id);
+  if (!p) return;
+  const prices = {};
+  for (const t of getPriceTypes()) {
+    const val = parseInt(document.getElementById(`pr-${t.id}-${id}`)?.value || 0);
+    if (val<=0) { toast(`Цена "${t.name}" должна быть > 0`,'var(--yellow)'); return; }
+    prices[t.id] = val;
+  }
+  p.name = document.getElementById(`pr-name-${id}`)?.value.trim() || p.name;
+  p.unit = document.getElementById(`pr-unit-${id}`)?.value.trim() || p.unit;
+  p.cat = document.getElementById(`pr-cat-${id}`)?.value.trim() || p.cat;
+  p.sugg = Math.max(0, parseInt(document.getElementById(`pr-sugg-${id}`)?.value || p.sugg || 0));
+  db.product_prices[id] = prices;
+  db.prices[id] = prices.base;
+  saveDB();
+  toast(`✅ Товар обновлён · ${p.name}`);
 }
 
 // ═══════════════════════════════════════
