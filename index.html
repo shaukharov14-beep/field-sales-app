@@ -32,6 +32,8 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--s
 .demo-role{font-family:var(--mono);font-size:9px;font-weight:600;color:var(--accent);letter-spacing:.06em}
 .demo-name{font-size:13px;font-weight:600;color:var(--text);margin-top:1px}
 .demo-hint{font-size:10px;color:var(--text3)}
+.login-error{font-size:11px;color:var(--red);min-height:16px;margin-top:6px}
+.login-help{font-size:10px;color:var(--text3);margin-top:10px;line-height:1.4}
 
 /* TOPBAR */
 #topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 12px;height:50px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;z-index:100}
@@ -145,23 +147,20 @@ select.form-input option{background:var(--bg3)}
   <div class="login-logo">FIELD<span>OS</span></div>
   <div style="font-size:11px;font-family:var(--mono);color:var(--text3);margin-top:-6px">v1.0 · Казахстан FMCG</div>
   <div class="login-card">
-    <div class="login-title">Выберите свою роль</div>
-    <div class="login-sub">Данные сохраняются в вашем браузере</div>
-    <div class="demo-btn" onclick="login('rep1')">
-      <div style="font-size:22px">👤</div>
-      <div><div class="demo-role">ТОРГОВЫЙ ПРЕДСТАВИТЕЛЬ</div><div class="demo-name">Алибек Дуйсенов</div><div class="demo-hint">Маршрут · Визиты · Заказы · Мерч · Коины</div></div>
+    <div class="login-title">Вход в систему</div>
+    <div class="login-sub">Введите логин и пароль</div>
+    <div class="form-group">
+      <label class="form-label">Логин</label>
+      <input id="login-name" class="form-input" placeholder="Например: rep1">
     </div>
-    <div class="demo-btn" onclick="login('rep2')">
-      <div style="font-size:22px">👤</div>
-      <div><div class="demo-role">ТОРГОВЫЙ ПРЕДСТАВИТЕЛЬ</div><div class="demo-name">Нурлан Сейткали</div><div class="demo-hint">Маршрут · Визиты · Заказы · Мерч · Коины</div></div>
+    <div class="form-group">
+      <label class="form-label">Пароль</label>
+      <input id="login-pass" type="password" class="form-input" placeholder="Введите пароль">
     </div>
-    <div class="demo-btn" onclick="login('sup')">
-      <div style="font-size:22px">👨‍💼</div>
-      <div><div class="demo-role">СУПЕРВАЙЗЕР</div><div class="demo-name">Руслан Ахметов</div><div class="demo-hint">Команда · KPI · Риски · Задачи</div></div>
-    </div>
-    <div class="demo-btn" onclick="login('op')">
-      <div style="font-size:22px">🖥️</div>
-      <div><div class="demo-role">ОПЕРАТОР</div><div class="demo-name">Зарина Исатова</div><div class="demo-hint">Заказы · Цены · Склад · Документы</div></div>
+    <button class="btn btn-primary btn-full" onclick="loginWithCredentials()">Войти</button>
+    <div id="login-error" class="login-error"></div>
+    <div class="login-help">
+      Демо доступы: rep1/rep1pass, rep2/rep2pass, sup/sup123, op/op123
     </div>
   </div>
   <div style="font-size:10px;color:var(--text3);text-align:center;font-family:var(--mono)">Все данные хранятся локально в браузере</div>
@@ -418,14 +417,14 @@ let db = loadDB();
 // STATIC DATA
 // ═══════════════════════════════════════
 const USERS = {
-  rep1: {id:'rep1',name:'Алибек Дуйсенов',role:'rep',short:'АД'},
-  rep2: {id:'rep2',name:'Нурлан Сейткали',role:'rep',short:'НС'},
-  rep3: {id:'rep3',name:'Айдана Бекова',role:'rep',short:'АБ'},
-  rep4: {id:'rep4',name:'Серик Жаксыбеков',role:'rep',short:'СЖ'},
-  rep5: {id:'rep5',name:'Гульнара Омарова',role:'rep',short:'ГО'},
-  rep6: {id:'rep6',name:'Дамир Касымов',role:'rep',short:'ДК'},
-  sup:  {id:'sup',name:'Руслан Ахметов',role:'supervisor',short:'РА'},
-  op:   {id:'op',name:'Зарина Исатова',role:'operator',short:'ЗИ'},
+  rep1: {id:'rep1',login:'rep1',password:'rep1pass',name:'Алибек Дуйсенов',role:'rep',short:'АД'},
+  rep2: {id:'rep2',login:'rep2',password:'rep2pass',name:'Нурлан Сейткали',role:'rep',short:'НС'},
+  rep3: {id:'rep3',login:'rep3',password:'rep3pass',name:'Айдана Бекова',role:'rep',short:'АБ'},
+  rep4: {id:'rep4',login:'rep4',password:'rep4pass',name:'Серик Жаксыбеков',role:'rep',short:'СЖ'},
+  rep5: {id:'rep5',login:'rep5',password:'rep5pass',name:'Гульнара Омарова',role:'rep',short:'ГО'},
+  rep6: {id:'rep6',login:'rep6',password:'rep6pass',name:'Дамир Касымов',role:'rep',short:'ДК'},
+  sup:  {id:'sup',login:'sup',password:'sup123',name:'Руслан Ахметов',role:'supervisor',short:'РА'},
+  op:   {id:'op',login:'op',password:'op123',name:'Зарина Исатова',role:'operator',short:'ЗИ'},
 };
 
 const DEFAULT_OUTLETS = [
@@ -488,16 +487,36 @@ let orderSubmitted = false;
 // AUTH
 // ═══════════════════════════════════════
 function login(userId) {
-  curUser = USERS[userId];
+  const u = USERS[userId];
+  if (!u) return;
+  curUser = {id:u.id,login:u.login,name:u.name,role:u.role,short:u.short};
   curRole = curUser.role;
   sessionStorage.setItem('fsos_user', JSON.stringify(curUser));
   bootApp();
+}
+function loginWithCredentials() {
+  const loginInput = document.getElementById('login-name');
+  const passInput = document.getElementById('login-pass');
+  const err = document.getElementById('login-error');
+  const loginVal = (loginInput?.value || '').trim().toLowerCase();
+  const passVal = passInput?.value || '';
+  const found = Object.values(USERS).find(u=>u.login===loginVal && u.password===passVal);
+  if (!found) {
+    if (err) err.textContent = 'Неверный логин или пароль';
+    return;
+  }
+  if (err) err.textContent = '';
+  login(found.id);
 }
 function doLogout() {
   sessionStorage.removeItem('fsos_user');
   curUser = null;
   document.getElementById('login-screen').style.display='flex';
   document.getElementById('app-shell').style.display='none';
+  const passInput = document.getElementById('login-pass');
+  const err = document.getElementById('login-error');
+  if (passInput) passInput.value = '';
+  if (err) err.textContent = '';
 }
 function bootApp() {
   document.getElementById('login-screen').style.display='none';
@@ -1627,6 +1646,12 @@ function saveWarehouse(id) {
 // ═══════════════════════════════════════
 // AUTO-BOOT
 // ═══════════════════════════════════════
+document.getElementById('login-pass')?.addEventListener('keydown', e=>{
+  if (e.key==='Enter') loginWithCredentials();
+});
+document.getElementById('login-name')?.addEventListener('keydown', e=>{
+  if (e.key==='Enter') loginWithCredentials();
+});
 if (curUser) bootApp();
 </script>
 </body>
